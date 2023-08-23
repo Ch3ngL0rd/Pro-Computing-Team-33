@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "pro-computing-team-33"
+version = "0.1.0"
+description = ""
+authors = ["Sean Garcia <sean.pgarcia@outlook.com>"]
+readme = "README.md"
+packages = [{include = "pro_computing_team_33"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pysimplegui = "^4.60.5"
+pandas = "^2.0.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
