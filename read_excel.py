@@ -4,7 +4,7 @@ import sqlite3
 def update_database(excel_data):
     try:
         # Connect to the SQLite database 
-        connection = sqlite3.connect('DATABASE_NAME.db')  # Replace 'DATABASE_NAME' with name of database 
+        connection = sqlite3.connect('sqlite_studentDB.py')  
 
         # Loop through the DataFrame rows and update the database
         for index, row in excel_data.iterrows():
@@ -58,6 +58,6 @@ def update_database(excel_data):
 
 
 def main():
-    excel_file_path = 'FILE_NAME.xls' # Replace 'FILE_NAME' with name of excel file 
-    excel_data = panda.read_excel(excel_file_path)
+    excel_file_name = 'FILE_NAME.xls' # Replace 'FILE_NAME' with name of excel file 
+    excel_data = panda.read_excel(excel_file_name)
     update_database(excel_data)
