@@ -1,6 +1,7 @@
 import pandas as panda
 import sqlite3
 
+
 def update_database(excel_data):
     try:
         # Connect to the SQLite database 
@@ -61,6 +62,7 @@ def main():
     excel_file_name = 'FILE_NAME.xls' # Replace 'FILE_NAME' with name of excel file 
     excel_data = panda.read_excel(excel_file_name)
     update_database(excel_data)
+
 
 if __name__ == "__main__":
     main()
