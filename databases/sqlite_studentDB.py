@@ -5,12 +5,16 @@ import sqlite3
 
 class Sqlite_studentDB(StudentDB):
     def create_db(self):
-        conn = sqlite3.connect(':memory:')
-        cursor = conn.cursor()
+        connection = sqlite3.connect(':memory:')
+        cursor = connection.cursor()
 
-        
+
         cursor.execute('''
-            CREATE TABLE 
+            CREATE TABLE Students
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE Unit
         ''')
 
         print("student database created")
