@@ -5,13 +5,12 @@ and opens UI
 """
 from databases.sqlite_studentDB import Sqlite_studentDB
 
-"""_summary_
-"""
+
 def main():
     # initialises required databases
     student_db = Sqlite_studentDB()
 
-    student_db.test()
+    student_db.create_db()
 
 if __name__ == "__main__":
     main()
