@@ -32,7 +32,7 @@ def update_database(excel_data):
                 f"column2 = {column2_data},\n"  
                 f"column3 = {column3_data},\n"
                 f"column4 = {column4_data},\n"
-                f"column5 ={column5_data},\n"
+                f"column5 = {column5_data},\n"
                 f"column6 = {column6_data},\n"
                 f"column7 = {column7_data},\n"
                 f"column8 = {column8_data},\n"
