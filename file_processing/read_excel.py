@@ -1,5 +1,7 @@
-import pandas as panda
+import pandas as pd
 import sqlite3
+
+from ..databases import sqlite_studentDB
 
 
 def update_database(excel_data):
@@ -58,11 +60,17 @@ def update_database(excel_data):
         connection.close()
 
 
-def main():
+def open_file(filepath):
     excel_file_name = 'FILE_NAME.xls' # Replace 'FILE_NAME' with name of excel file 
-    excel_data = panda.read_excel(excel_file_name)
-    update_database(excel_data)
+    excel_data = pd.read_excel(excel_file_name)
+
+    return excel_data
 
 
+# testing
 if __name__ == "__main__":
-    main()
+    filepath = r'../test_files/Example Data BE(Hons).xlsx'
+    student_db = sqlite_studentDB.Sqlite_studentDB()
+    
+    student_data = open_file(filepath)
+    update_database(student_data)

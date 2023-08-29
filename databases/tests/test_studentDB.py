@@ -10,7 +10,7 @@ sys.path.append(parent)
 from sqlite_studentDB import Sqlite_studentDB
 
 class StudentDB_Tests(unittest.TestCase):
-    def test_queries(self):
+    def test_db(self):
         self.student_db = Sqlite_studentDB()
         self.student_db.create_db()
 
@@ -67,6 +67,36 @@ class StudentDB_Tests(unittest.TestCase):
         self.assertEqual(len(students), 2)
         self.assertEqual(students[0], ('23001000', 'Alban', 'Robert'))
         self.assertEqual(students[1], ('23002002', 'Bleaker', 'Mary'))
+
+
+    def test_add_student(self):
+        self.student_db = Sqlite_studentDB()
+        self.student_db.create_db()
+
+        # test that the student has been added properly
+        student_1 = {
+            'student_id': '23001000',
+            'surname': 'Alban',
+            'given_name': 'Robert',
+            'student_title': 'Mr.',
+            'course_code': 'BH011',
+            'course_title': 'Bachelor of Engineering (Honours)',
+            'major_deg': 'Mechanical Engineering'
+        }
+
+        self.student_db.add_student(student_1)
+        students = self.student_db._execute('''
+            SELECT Students.student_id, Students.surname, Students.given_name FROM Students
+        ''')
+        self.assertEqual(students[0], ('23001000', 'Alban', 'Robert'))
+
+
+        # test the case where a duplicate student record is added
+
+        # test the case where a student changes degree
+
+        # test the case where a student changes major
+        pass
 
 
 if __name__ == "__main__":

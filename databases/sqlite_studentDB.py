@@ -9,6 +9,7 @@ import sqlite3
 """
 class Sqlite_studentDB(StudentDB):
     def __init__(self) -> None:
+        # location of database in memory
         self.connection = sqlite3.connect(':memory:')
 
 
@@ -50,13 +51,59 @@ class Sqlite_studentDB(StudentDB):
         cursor.close()
 
 
+    """_summary_
     """
+    def truncate_db(self):
+        cursor = self.connection.cursor()
+
+        cursor.execute("DELETE FROM Students")
+        cursor.execute("VACUUM")
+
+        cursor.execute("DELETE FROM Units")
+        cursor.execute("VACUUM")
+
+        cursor.execute("DELETE FROM Enrollments")
+        cursor.execute("VACUUM")
+
+        self.connection.commit()
+        cursor.close()
+
+
+    """
+
+    """
+    def add_student(self, student_data: dict):
+        cursor = self.connection.cursor()
+        
+        # order of values only maintained in python 3.7 and above
+        query_data = tuple(student_data.values())
+
+        cursor.execute('''
+        INSERT OR REPLACE INTO
+            Students(student_id, surname, given_name, student_title, course_code, course_title, major_deg)
+            VALUES(?, ?, ?, ?, ?, ?, ?);
+        ''', query_data)
+
+        self.connection.commit()
+        cursor.close()
+
+
+    def add_unit(self):
+        return super().add_unit()
+    
+
+    def add_enrollment(self):
+        return super().add_enrollment()
+
+    """
+    FOR TESTING
     executes queries on database
     """
     def _execute(self, query: str) -> list:
         cursor = self.connection.cursor()
         cursor.execute(query)
         result = cursor.fetchall()
+        self.connection.commit()
         cursor.close()
         return result
 
