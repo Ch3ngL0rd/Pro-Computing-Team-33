@@ -1,10 +1,16 @@
-from ..sqlite_studentDB import Sqlite_studentDB
-
 import unittest
 
+# get path to immport db implementation
+import sys
+import os
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
+from sqlite_studentDB import Sqlite_studentDB
 
 class StudentDB_Tests(unittest.TestCase):
-    def init_db(self):
+    def test_queries(self):
         self.student_db = Sqlite_studentDB()
         self.student_db.create_db()
 
@@ -35,21 +41,33 @@ class StudentDB_Tests(unittest.TestCase):
         self.student_db._execute("INSERT INTO Enrollments(student_id, unit_code, mark) VALUES('23002002', 'PHYS1001', 57);")
 
 
-    def test_queries(self):
+        ## test sample data
         # print all enrollments
-        results = self.student_db._execute("SELECT * FROM Enrollments;")
-        enrollments = "\n".join(results)
-        expected_enrollments = "('23001000', 'PHYS1001', 70)\n('23001000', 'MATH1011', 97)\n('23001000', 'GENG1010', 76)\n('23002002', 'GENG1010', 77)\n('23002002', 'PHYS1001', 57)"
-        self.assertEqual(enrollments, expected_enrollments)
+        enrollments = self.student_db._execute("SELECT * FROM Enrollments;")    
+        self.assertEqual(len(enrollments), 5)
+        self.assertEqual(enrollments[0], ('23001000', 'PHYS1001', 70))
+        self.assertEqual(enrollments[1], ('23001000', 'MATH1011', 97))
+        self.assertEqual(enrollments[2], ('23001000', 'GENG1010', 76))
+        self.assertEqual(enrollments[3], ('23002002', 'GENG1010', 77))
+        self.assertEqual(enrollments[4], ('23002002', 'PHYS1001', 57))
+
+        # print enerollments for a single student
+        enrollments = self.student_db._execute("SELECT * FROM Enrollments WHERE student_id = '23002002';")
+        self.assertEqual(len(enrollments), 2)
+        self.assertEqual(enrollments[0], ('23002002', 'GENG1010', 77))
+        self.assertEqual(enrollments[1], ('23002002', 'PHYS1001', 57))
+
+        # print students that do the same unit
+        students = self.student_db._execute('''
+            SELECT Students.student_id, Students.surname, Students.given_name
+            FROM Students
+            INNER JOIN Enrollments ON Students.student_id = Enrollments.student_id
+            WHERE Enrollments.unit_code = 'PHYS1001';
+        ''')
+        self.assertEqual(len(students), 2)
+        self.assertEqual(students[0], ('23001000', 'Alban', 'Robert'))
+        self.assertEqual(students[1], ('23002002', 'Bleaker', 'Mary'))
 
 
-        # # print enerollments for a single student
-        # output = self.student_db._execute("SELECT * FROM Enrollments WHERE student_id = '23002002';")
-
-        # # print students that do the same unit
-        # output = self.student_db._execute('''
-        #     SELECT Students.student_id, Students.surname, Students.given_name
-        #     FROM Students
-        #     INNER JOIN Enrollments ON Students.student_id = Enrollments.student_id
-        #     WHERE Enrollments.unit_code = 'PHYS1001';
-        # ''')
+if __name__ == "__main__":
+    unittest.main
