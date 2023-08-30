@@ -1,7 +1,7 @@
 """_summary_
 """
 
-from studentDB import StudentDB
+from databases.studentDB import StudentDB
 
 import sqlite3
 
@@ -106,9 +106,3 @@ class Sqlite_studentDB(StudentDB):
         self.connection.commit()
         cursor.close()
         return result
-
-
-
-# testing
-if __name__ == "__main__":
-    pass

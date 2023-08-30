@@ -1,6 +1,6 @@
 import unittest
 
-# get path to immport db implementation
+# get path to import db implementation
 import sys
 import os
 current = os.path.dirname(os.path.realpath(__file__))
@@ -96,8 +96,3 @@ class StudentDB_Tests(unittest.TestCase):
         # test the case where a student changes degree
 
         # test the case where a student changes major
-        pass
-
-
-if __name__ == "__main__":
-    unittest.main
