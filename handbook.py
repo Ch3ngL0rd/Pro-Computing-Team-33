@@ -104,37 +104,52 @@ def create_major(cursor, major_name, major_year):
 
 def link_major_rule(cursor, major_id, rule_id):
     cursor.execute("INSERT INTO MajorRules(major_id, rule_id) VALUES(?,?)", (major_id,rule_id))
+    
+def unlink_unit_rule(cursor, unit_code, rule_id):
+    cursor.execute("DELETE FROM RuleUnits where unit_code = ? AND rule_id = ?", (unit_code, rule_id))
+    
+def fetch_all_units(cursor):
+    cursor.execute("SELECT unit_code FROM units")
+    rows = cursor.fetchall()
+    results = [row[0] for row in rows]
+    return results
 
-conn = create_db()
-cursor = conn.cursor()
-# Insert Sample Data
-create_unit(cursor, 'ENSC1003', 6)
-create_unit(cursor, 'CITS2401', 6)
-create_unit(cursor, 'MATH1011', 6)
-create_rule(cursor, 6)
-create_rule(cursor, 18)
-create_rule(cursor, 12)
-create_major(cursor,'Computer Science', 2023)
-create_major(cursor,'Computer Science', 2022)
+def fetch_all_rules(cursor):
+    cursor.execute("SELECT rule_id from Rules")
+    rows = cursor.fetchall()
+    results = [row[0] for row in rows]
 
-#Link sample data
-link_unit_rule(cursor,'CITS2401', 1)
-link_unit_rule(cursor,'ENSC1003',2)
-link_unit_rule(cursor,'CITS2401',2)
-link_unit_rule(cursor,'MATH1011',2)
-link_unit_rule(cursor,'CITS2401',3)
-link_unit_rule(cursor,'MATH1011',3)
+    return results
 
-link_major_rule(cursor,1,1)
-link_major_rule(cursor,1,3)
-link_major_rule(cursor,1,2)
-link_major_rule(cursor,2,2)
-link_major_rule(cursor,2,3)
+def initialize_db():
+    conn = create_db()
+    cursor = conn.cursor()
+    # Insert Sample Data
+    create_unit(cursor, 'ENSC1003', 6)
+    create_unit(cursor, 'CITS2401', 6)
+    create_unit(cursor, 'MATH1011', 6)
+    create_rule(cursor, 6)
+    create_rule(cursor, 18)
+    create_rule(cursor, 12)
+    create_major(cursor,'Computer Science', 2023)
+    create_major(cursor,'Computer Science', 2022)
 
-# Commit the changes
-conn.commit()
+    #Link sample data
+    link_unit_rule(cursor,'CITS2401', 1)
+    link_unit_rule(cursor,'ENSC1003',2)
+    link_unit_rule(cursor,'CITS2401',2)
+    link_unit_rule(cursor,'MATH1011',2)
+    link_unit_rule(cursor,'CITS2401',3)
+    link_unit_rule(cursor,'MATH1011',3)
 
-#Test getting the rules for sample data
-print(select_all_rules(conn, 'Computer Science', 2023))
-print("_______________________________________________________________")
-print(select_all_rules(conn, 'Computer Science', 2022))
+    link_major_rule(cursor,1,1)
+    link_major_rule(cursor,1,3)
+    link_major_rule(cursor,1,2)
+    link_major_rule(cursor,2,2)
+    link_major_rule(cursor,2,3)
+
+    # Commit the changes
+    conn.commit()
+
+    return conn
+
