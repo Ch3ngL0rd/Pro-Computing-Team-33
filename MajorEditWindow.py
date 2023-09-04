@@ -43,6 +43,14 @@ class DropBox(tk.Frame):
         self.canvas.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.pack(side='right', fill='y')
         self.labels = []
+        units = handbook.fetch_unit_rules(self.cursor, self.heading)
+        for unit in units:
+            new_label = tk.Label(self, text=unit, bg='lightblue', width=18)
+            remove_button = tk.Button(self, text='X', command=lambda: self.remove_label(new_label, remove_button))
+            lbl_id = self.canvas.create_window(0, len(self.labels) * 30, anchor='nw', window=new_label, width=120)
+            btn_id = self.canvas.create_window(120, len(self.labels) * 30, anchor='nw', window=remove_button, width=30)
+            self.labels.append((new_label, remove_button, lbl_id, btn_id))
+            self.canvas.config(scrollregion=self.canvas.bbox('all'))
         tk.Label(self, text=heading, bg='white', width=20).pack(side='top')
         self.canvas.pack(side='top', fill='both', expand=True)
 

@@ -121,6 +121,13 @@ def fetch_all_rules(cursor):
 
     return results
 
+def fetch_unit_rules(cursor, rule_id):
+    cursor.execute("SELECT unit_code from RuleUnits where rule_id = ?", (rule_id,))
+    rows = cursor.fetchall()
+    results = [row[0] for row in rows]
+
+    return results
+
 def initialize_db():
     conn = create_db()
     cursor = conn.cursor()
