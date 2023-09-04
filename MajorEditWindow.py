@@ -1,4 +1,5 @@
 import tkinter as tk
+import sqlite3
 import handbook
 
 class DraggableBox(tk.Label):
@@ -60,13 +61,16 @@ class DropBox(tk.Frame):
         return box_x <= x <= box_x + self.winfo_width() and box_y <= y <= box_y + self.winfo_height()
 
     def add_label(self, label):
-        new_label = tk.Label(self, text=label.word, bg='lightblue', width=18)
-        remove_button = tk.Button(self, text='X', command=lambda: self.remove_label(new_label, remove_button))
-        lbl_id = self.canvas.create_window(0, len(self.labels) * 30, anchor='nw', window=new_label, width=120)
-        btn_id = self.canvas.create_window(120, len(self.labels) * 30, anchor='nw', window=remove_button, width=30)
-        self.labels.append((new_label, remove_button, lbl_id, btn_id))
-        self.canvas.config(scrollregion=self.canvas.bbox('all'))
-        handbook.link_unit_rule(self.cursor, label.word, self.heading)
+        try:
+            handbook.link_unit_rule(self.cursor, label.word, self.heading)
+            new_label = tk.Label(self, text=label.word, bg='lightblue', width=18)
+            remove_button = tk.Button(self, text='X', command=lambda: self.remove_label(new_label, remove_button))
+            lbl_id = self.canvas.create_window(0, len(self.labels) * 30, anchor='nw', window=new_label, width=120)
+            btn_id = self.canvas.create_window(120, len(self.labels) * 30, anchor='nw', window=remove_button, width=30)
+            self.labels.append((new_label, remove_button, lbl_id, btn_id))
+            self.canvas.config(scrollregion=self.canvas.bbox('all'))
+        except sqlite3.Error:
+            None
         self.cursor.execute("SELECT * FROM RuleUnits")
         results = self.cursor.fetchall()
         print(results)
