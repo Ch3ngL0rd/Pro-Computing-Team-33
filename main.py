@@ -1,5 +1,8 @@
 import file_selector
 import calculate 
 
-file_selector.run_tkinter_app()
+# Global variable to store absolute file path
+absolute_file_path = ""
 
+file_selector.run_tkinter_app()
+# calculate.

@@ -1,9 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
 
-# Global variable to store absolute file path
-absolute_file_path = ""
-
 def open_file():
     global absolute_file_path  # Declare it as global if you plan to use it outside this function
     try:
