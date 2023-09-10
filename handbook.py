@@ -114,10 +114,11 @@ def fetch_all_units(cursor):
     results = [row[0] for row in rows]
     return results
 
+
 def fetch_all_rules(cursor):
-    cursor.execute("SELECT rule_id from Rules")
+    cursor.execute("SELECT * from Rules")
     rows = cursor.fetchall()
-    results = [row[0] for row in rows]
+    results = [row for row in rows]
 
     return results
 

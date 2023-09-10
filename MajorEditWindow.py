@@ -52,13 +52,14 @@ class DraggableBox(tk.Label):
             self.place(x=self.store_x, y=self.store_y)
 
 class DropBox(tk.Frame):
-    def __init__(self, parent, heading, cursor):
+    def __init__(self, parent, heading,id, cursor):
         #Intialize drop box as a tk.Frame
         super().__init__(parent)
         
         #Set parameters
         self.heading = heading
         self.cursor = cursor
+        self.id = id
         
         #Create object and scrollbar
         self.canvas = tk.Canvas(self, bg='black', width=150, height=100)
@@ -71,7 +72,7 @@ class DropBox(tk.Frame):
         new_label = None
         remove_button = None
         #Gets all units associated with the rule this drop box is based off & Create a label for each
-        units = handbook.fetch_unit_rules(self.cursor, self.heading)
+        units = handbook.fetch_unit_rules(self.cursor, self.id)
         for unit in units:
             #Creates a new label same as add_label (need to try and modify add_label to integrate this properly)
             #ie just make it a function call
@@ -97,7 +98,7 @@ class DropBox(tk.Frame):
     def add_label(self, label):
         try:
             #Try to create a new ruleUnit link
-            handbook.link_unit_rule(self.cursor, label.word, self.heading)
+            handbook.link_unit_rule(self.cursor, label.word, self.id)
             #Create a new label & x button for removing
             new_label = tk.Label(self, text=label.word, bg='lightblue', width=18)
             remove_button = tk.Button(self, text='X', command=lambda: self.remove_label(new_label, remove_button))
@@ -161,7 +162,7 @@ def main():
 
     #Fetch all rules from the database and create a drop box for each of them
     headings = handbook.fetch_all_rules(cursor)
-    drop_boxes = [DropBox(root, heading, cursor) for heading in headings]
+    drop_boxes = [DropBox(root, "rule " + str(heading[0])+" | value: "+str(heading[1]), heading[0], cursor) for heading in headings]
     
     drop_box_entry = tk.Entry(root)
     drop_box_entry.place(x=250, y=10)
@@ -169,20 +170,18 @@ def main():
     def create_draggable_box():
         #Get the word input
         word = drop_box_entry.get()
-        print(word)
         if word:
+            handbook.create_rule(cursor, word)
+            new_id = cursor.lastrowid
             #Create a new draggable box with that word & place it on the screen below all other boxes
-            box = DropBox(root, word, cursor)
+            box = DropBox(root, "rule " + str(new_id)+" | value: "+str(word), new_id, cursor)
             num_boxes = len(drop_boxes)
             box.place(x=num_boxes//4 * 200 + 250, y = num_boxes%4 * 150 + 50)
             box.lower()
             drop_boxes.append(box)
             
             #Add new unit to the database
-            handbook.create_rule(cursor, word)
-            
-            results = handbook.fetch_all_rules(cursor)
-            print(results)
+
     
     drop_box_button = tk.Button(root, text="Enter", command = create_draggable_box)
     drop_box_button.place(x=375, y=10)
