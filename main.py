@@ -1,8 +1,13 @@
 import file_selector
-import calculate 
+import calculate
 
-# Global variable to store absolute file path
-absolute_file_path = ""
+def main():
+    selected_file_path = file_selector.open_file()
 
-file_selector.run_tkinter_app()
-# calculate.
+    if selected_file_path:
+        calculate.calculations(selected_file_path)
+    else:
+        print("No file selected.")
+
+if __name__ == "__main__":
+    main()
