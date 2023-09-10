@@ -68,14 +68,16 @@ class DropBox(tk.Frame):
         #Place scrollbar on the left
         self.scrollbar.pack(side='left', fill='y')
         self.labels = []
-        
+        new_label = None
+        remove_button = None
         #Gets all units associated with the rule this drop box is based off & Create a label for each
         units = handbook.fetch_unit_rules(self.cursor, self.heading)
         for unit in units:
             #Creates a new label same as add_label (need to try and modify add_label to integrate this properly)
             #ie just make it a function call
             new_label = tk.Label(self, text=unit, bg='lightblue', width=18)
-            remove_button = tk.Button(self, text='X', command=lambda: self.remove_label(new_label, remove_button))
+            remove_button = tk.Button(self, text='X')
+            remove_button.config(command=lambda label=new_label, button=remove_button: self.remove_label(label, button))
             lbl_id = self.canvas.create_window(0, len(self.labels) * 30, anchor='nw', window=new_label, width=120)
             btn_id = self.canvas.create_window(120, len(self.labels) * 30, anchor='nw', window=remove_button, width=30)
             self.labels.append((new_label, remove_button, lbl_id, btn_id))
@@ -123,7 +125,7 @@ class DropBox(tk.Frame):
         self.canvas.delete(btn_id)
         label.destroy()
         button.destroy()
-        
+    
         #Adjust position of every label in the box based off its new index (ie move them up if they were below the deleted label)
         for i, (lbl, btn, lbl_id, btn_id) in enumerate(self.labels):
             self.canvas.coords(lbl_id, 0, i * 30)
