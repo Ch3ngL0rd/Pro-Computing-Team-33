@@ -165,11 +165,11 @@ def main():
 
     #Place each drop box on the screen
     for i, box in enumerate(drop_boxes):
-        box.place(x=50, y=50 + i * 125)
+        box.place(x=i//4 * 200 + 250, y= 10 + i%4 * 150)
     
     #Create and place text entry field to create new units
     entry = tk.Entry(root)
-    entry.place(x=400, y=10)
+    entry.place(x=50, y=10)
     
     #Function to both create a new unit in the db & create a new physical box for the unit when a word
     #Is entered into entry
@@ -179,7 +179,7 @@ def main():
         if word:
             #Create a new draggable box with that word & place it on the screen below all other boxes
             box = DraggableBox(root, word, drop_boxes)
-            box.place(x=400, y=50 + len(draggable_boxes) * spacing)
+            box.place(x=50, y=50 + len(draggable_boxes) * spacing)
             draggable_boxes.append(box)
             
             #Add new unit to the database
@@ -187,7 +187,7 @@ def main():
 
     #Create an enter button for creating a new unit
     button = tk.Button(root, text="Enter", command=create_draggable_box)
-    button.place(x=500, y=10)
+    button.place(x=150, y=10)
 
     #Fetch all units in the db and create draggable boxes for each of them
     words = handbook.fetch_all_units(cursor)
@@ -196,7 +196,7 @@ def main():
     spacing = 25
     #Place all of the draggable boxes on the screen
     for i, box in enumerate(draggable_boxes):
-        box.place(x=400, y=50 + i * spacing)
+        box.place(x=50, y=50 + i * spacing)
 
     #Start GUI Event Loop
     root.mainloop()

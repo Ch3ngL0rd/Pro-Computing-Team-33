@@ -138,6 +138,7 @@ def initialize_db():
     create_rule(cursor, 6)
     create_rule(cursor, 18)
     create_rule(cursor, 12)
+    create_rule(cursor, 24)
     create_major(cursor,'Computer Science', 2023)
     create_major(cursor,'Computer Science', 2022)
 
@@ -154,6 +155,7 @@ def initialize_db():
     link_major_rule(cursor,1,2)
     link_major_rule(cursor,2,2)
     link_major_rule(cursor,2,3)
+    link_major_rule(cursor,2,4)
 
     # Commit the changes
     conn.commit()
