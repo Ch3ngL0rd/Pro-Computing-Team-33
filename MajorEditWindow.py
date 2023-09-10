@@ -157,15 +157,39 @@ def main():
     #Initializa GUI Window & set title/dimensions
     root = tk.Tk()
     root.title("Modify major")
-    root.geometry("800x800")
+    root.geometry("1920x1080")
 
     #Fetch all rules from the database and create a drop box for each of them
     headings = handbook.fetch_all_rules(cursor)
     drop_boxes = [DropBox(root, heading, cursor) for heading in headings]
-
+    
+    drop_box_entry = tk.Entry(root)
+    drop_box_entry.place(x=250, y=10)
+    
+    def create_draggable_box():
+        #Get the word input
+        word = drop_box_entry.get()
+        print(word)
+        if word:
+            #Create a new draggable box with that word & place it on the screen below all other boxes
+            box = DropBox(root, word, cursor)
+            num_boxes = len(drop_boxes)
+            box.place(x=num_boxes//4 * 200 + 250, y = num_boxes%4 * 150 + 50)
+            box.lower()
+            drop_boxes.append(box)
+            
+            #Add new unit to the database
+            handbook.create_rule(cursor, word)
+            
+            results = handbook.fetch_all_rules(cursor)
+            print(results)
+    
+    drop_box_button = tk.Button(root, text="Enter", command = create_draggable_box)
+    drop_box_button.place(x=375, y=10)
     #Place each drop box on the screen
     for i, box in enumerate(drop_boxes):
-        box.place(x=i//4 * 200 + 250, y= 10 + i%4 * 150)
+        count = i
+        box.place(x=i//4 * 200 + 250, y= 50 + i%4 * 150)
     
     #Create and place text entry field to create new units
     entry = tk.Entry(root)
