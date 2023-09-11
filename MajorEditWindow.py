@@ -151,78 +151,95 @@ def console_output(heading, word):
     print(f"Dropped in {heading}:", word)
 
 def main():
-    #Create the database and get the cursor
+    # Create the database and get the cursor
     conn = handbook.initialize_db()
     cursor = conn.cursor()
     
-    #Initializa GUI Window & set title/dimensions
+    # Initialize GUI Window & set title/dimensions
     root = tk.Tk()
     root.title("Modify major")
     root.geometry("1920x1080")
-
-    #Fetch all rules from the database and create a drop box for each of them
+    
+    # Function to refresh the screen based on the dropdown selection
+    def refresh_screen():
+        # Split the selected option to get name/year
+        print(clicked.get())
+        name, year = clicked.get().split("|")
+        
+        # Fetch all units and rules associated with the selected name/year
+        units = handbook.fetch_all_units(cursor)
+        rules = handbook.fetch_major_rules(cursor, name, year)
+        
+        # Clear the current draggable boxes and drop boxes
+        for box in draggable_boxes:
+            box.destroy()
+        for box in drop_boxes:
+            box.destroy()
+        
+        # Create new draggable boxes and drop boxes based on the fetched units and rules
+        draggable_boxes[:] = [DraggableBox(root, unit, drop_boxes) for unit in units]
+        drop_boxes[:] = [DropBox(root, "rule " + str(rule[0])+" | value: "+str(rule[1]), rule[0], cursor) for rule in rules]
+        
+        # Place the new boxes on the screen
+        for i, box in enumerate(draggable_boxes):
+            box.place(x=50, y=50 + i * 25)
+        for i, box in enumerate(drop_boxes):
+            box.place(x=i//4 * 200 + 250, y= 50 + i%4 * 150)
+    
+    # Dropdown menu options
+    options = handbook.fetch_all_majors(cursor)
+    options = [major[0] + "|" + str(major[1]) for major in options]
+    
+    # datatype of menu text
+    clicked = tk.StringVar()
+    # initial menu text
+    clicked.set("")
+    
+    # Create Dropdown menu
+    drop = tk.OptionMenu(root, clicked, *options)
+    drop.pack()
+    
+    # Create button to refresh the screen based on the dropdown selection
+    button = tk.Button(root, text="OK", command=refresh_screen)
+    button.pack()
+    
+    # Initialize drop_boxes list
     headings = handbook.fetch_all_rules(cursor)
     drop_boxes = [DropBox(root, "rule " + str(heading[0])+" | value: "+str(heading[1]), heading[0], cursor) for heading in headings]
     
-    drop_box_entry = tk.Entry(root)
-    drop_box_entry.place(x=250, y=10)
-    
-    def create_draggable_box():
-        #Get the word input
-        word = drop_box_entry.get()
-        if word:
-            handbook.create_rule(cursor, word)
-            new_id = cursor.lastrowid
-            #Create a new draggable box with that word & place it on the screen below all other boxes
-            box = DropBox(root, "rule " + str(new_id)+" | value: "+str(word), new_id, cursor)
-            num_boxes = len(drop_boxes)
-            box.place(x=num_boxes//4 * 200 + 250, y = num_boxes%4 * 150 + 50)
-            box.lower()
-            drop_boxes.append(box)
-            
-            #Add new unit to the database
-
-    
-    drop_box_button = tk.Button(root, text="Enter", command = create_draggable_box)
-    drop_box_button.place(x=375, y=10)
-    #Place each drop box on the screen
-    for i, box in enumerate(drop_boxes):
-        count = i
-        box.place(x=i//4 * 200 + 250, y= 50 + i%4 * 150)
-    
-    #Create and place text entry field to create new units
-    entry = tk.Entry(root)
-    entry.place(x=50, y=10)
-    
-    #Function to both create a new unit in the db & create a new physical box for the unit when a word
-    #Is entered into entry
-    def create_draggable_box():
-        #Get the word input
-        word = entry.get()
-        if word:
-            #Create a new draggable box with that word & place it on the screen below all other boxes
-            box = DraggableBox(root, word, drop_boxes)
-            box.place(x=50, y=50 + len(draggable_boxes) * spacing)
-            draggable_boxes.append(box)
-            
-            #Add new unit to the database
-            handbook.create_unit(cursor, word, 6)
-
-    #Create an enter button for creating a new unit
-    button = tk.Button(root, text="Enter", command=create_draggable_box)
-    button.place(x=150, y=10)
-
-    #Fetch all units in the db and create draggable boxes for each of them
+    # Fetch all units in the db and create draggable boxes for each of them
     words = handbook.fetch_all_units(cursor)
     draggable_boxes = [DraggableBox(root, word, drop_boxes) for word in words]
     
-    spacing = 25
-    #Place all of the draggable boxes on the screen
+    # Place all of the draggable boxes on the screen
     for i, box in enumerate(draggable_boxes):
-        box.place(x=50, y=50 + i * spacing)
+        box.place(x=50, y=50 + i * 25)
 
-    #Start GUI Event Loop
+    # Create and place text entry field to create new units
+    entry = tk.Entry(root)
+    entry.place(x=50, y=10)
+    
+    # Function to both create a new unit in the db & create a new physical box for the unit when a word
+    # Is entered into entry
+    def create_draggable_box():
+        # Get the word input
+        word = entry.get()
+        if word:
+            # Create a new draggable box with that word & place it on the screen below all other boxes
+            box = DraggableBox(root, word, drop_boxes)
+            box.place(x=50, y=50 + len(draggable_boxes) * 25)
+            draggable_boxes.append(box)
+            
+            # Add new unit to the database
+            handbook.create_unit(cursor, word, 6)
+
+    # Create an enter button for creating a new unit
+    button = tk.Button(root, text="Enter", command=create_draggable_box)
+    button.place(x=150, y=10)
+
+    # Start GUI Event Loop
     root.mainloop()
 
 if __name__ == "__main__":
     main()
+

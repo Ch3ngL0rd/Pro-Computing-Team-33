@@ -114,6 +114,17 @@ def fetch_all_units(cursor):
     results = [row[0] for row in rows]
     return results
 
+def fetch_major_rules(cursor, major, year):
+    cursor.execute("""
+        SELECT r.*
+        FROM Rules r
+        INNER JOIN MajorRules rm ON r.rule_id = rm.rule_id
+        INNER JOIN Major m ON rm.major_id = m.major_ID
+        WHERE m.name = ? AND m.year = ?
+        """, (major, year))
+    rows = cursor.fetchall()
+    results = [row for row in rows]
+    return results
 
 def fetch_all_rules(cursor):
     cursor.execute("SELECT * from Rules")
@@ -121,6 +132,14 @@ def fetch_all_rules(cursor):
     results = [row for row in rows]
 
     return results
+
+def fetch_all_majors(cursor):
+    cursor.execute("SELECT name, year from Major")
+    rows = cursor.fetchall()
+    
+    results = [row for row in rows]
+    return results
+    
 
 def fetch_unit_rules(cursor, rule_id):
     cursor.execute("SELECT unit_code from RuleUnits where rule_id = ?", (rule_id,))
