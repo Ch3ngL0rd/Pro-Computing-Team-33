@@ -169,6 +169,7 @@ def main():
         # Fetch all units and rules associated with the selected name/year
         units = handbook.fetch_all_units(cursor)
         rules = handbook.fetch_major_rules(cursor, name, year)
+        mID = handbook.get_major_id(cursor, name, year)
         
         # Clear the current draggable boxes and drop boxes
         for box in draggable_boxes:
@@ -185,6 +186,31 @@ def main():
             box.place(x=50, y=50 + i * 25)
         for i, box in enumerate(drop_boxes):
             box.place(x=i//4 * 200 + 250, y= 50 + i%4 * 150)
+            
+        drop_box_entry = tk.Entry(root)
+        drop_box_entry.place(x=250, y=10)
+    
+        def create_draggable_box(mId):
+            #Get the word input
+            word = drop_box_entry.get()
+            if word:
+                print("YO")
+                handbook.create_rule(cursor, word)
+
+                new_id = cursor.lastrowid
+                
+                handbook.link_major_rule(cursor,mId, new_id)
+                #Create a new draggable box with that word & place it on the screen below all other boxes
+                box = DropBox(root, "rule " + str(new_id)+" | value: "+str(word), new_id, cursor)
+                num_boxes = len(drop_boxes)
+                box.place(x=num_boxes//4 * 200 + 250, y = num_boxes%4 * 150 + 50)
+                box.lower()
+                drop_boxes.append(box)
+
+
+    
+        drop_box_button = tk.Button(root, text="Enter", command=lambda: create_draggable_box(mID))
+        drop_box_button.place(x=375, y=10)
     
     # Dropdown menu options
     options = handbook.fetch_all_majors(cursor)

@@ -125,7 +125,13 @@ def fetch_major_rules(cursor, major, year):
     rows = cursor.fetchall()
     results = [row for row in rows]
     return results
-
+def get_major_id(cursor, major, year):
+    cursor.execute("SELECT major_id from Major where year=? AND name = ?", (year, major))
+    
+    rows = cursor.fetchall()
+    print(rows)
+    return rows[0][0]
+    
 def fetch_all_rules(cursor):
     cursor.execute("SELECT * from Rules")
     rows = cursor.fetchall()
