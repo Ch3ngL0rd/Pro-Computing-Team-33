@@ -1,5 +1,4 @@
 import pandas as pd
-import handbook
 
 def adjust_mark(row):
     grade = row['Grade']
@@ -50,7 +49,6 @@ def major_units(conn, major, yr):
 
 
 def calculations(file):
-    conn = handbook.initialize_db()
     # Load the input data
     input_data = pd.read_excel(file)
 

@@ -6,8 +6,9 @@ import os
 
 class TkinterApp():
     def __init__(self) -> None:
-        self.input_filepath = None
-        self.output_filepath = None
+        # set default path to home
+        self.input_filepath = os.path.expanduser("~")
+        self.output_filepath = os.path.expanduser("~")
 
 
     def run_tkinter_app(self):
@@ -77,7 +78,8 @@ class TkinterApp():
         try:
             file_path = filedialog.askopenfilename(
                 title="Select a File",
-                filetypes=[("Excel Files", "*.xlsx")]
+                filetypes=[("Excel Files", "*.xlsx")],
+                initialdir=self.input_filepath
             )
             self.input_filepath = file_path
             label.config(text=f"Selected Input File: ...{self.input_filepath[-truncate_value:]}")
@@ -86,14 +88,16 @@ class TkinterApp():
         except Exception as e:
             print(f"Error: {str(e)}")
             return None
-        
+
+
     def select_output_file(self, label):
         truncate_value = 30 # 30 characters
 
         try:
             file_path = filedialog.asksaveasfilename(
                 defaultextension=".xlsx",
-                filetypes=[("Excel Files", "*.xlsx")]
+                filetypes=[("Excel Files", "*.xlsx")],
+                initialdir=self.output_filepath
             )
             self.output_filepath = file_path
             label.config(text=f"Selected Output File: ...{self.output_filepath[-truncate_value:]}")
