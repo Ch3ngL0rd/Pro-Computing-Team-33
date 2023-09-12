@@ -48,9 +48,9 @@ def major_units(conn, major, yr):
     return core_units
 
 
-def calculations(file):
+def calculations(input_filepath, output_filepath):
     # Load the input data
-    input_data = pd.read_excel(file)
+    input_data = pd.read_excel(input_filepath)
 
     # Adjust marks and choose the correct credit points based on the provided rules
     input_data['Adjusted_Mark'] = input_data.apply(adjust_mark, axis=1)
@@ -76,4 +76,4 @@ def calculations(file):
     merged_data_adjusted['Honours Class'] = merged_data_adjusted.apply(assign_honours, axis=1)
 
     # Save the processed data to an output Excel file (optional)
-    merged_data_adjusted.to_excel("output_file.xlsx", index=False)
+    merged_data_adjusted.to_excel(output_filepath, index=False)

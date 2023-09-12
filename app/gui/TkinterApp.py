@@ -3,6 +3,8 @@ from tkinter import filedialog
 
 import os
 
+from app.logic.calculate import calculations
+
 
 class TkinterApp():
     def __init__(self) -> None:
@@ -58,8 +60,13 @@ class TkinterApp():
 
 
         # make sure this is grey or not submittable until both input and output variables are specified
-        process_file_button = tk.Button(file_select_frame, width=file_select_button_width, text="Process", command=root.quit)
+        process_file_button = tk.Button(
+            file_select_frame, width=file_select_button_width, text="Process",
+            command=lambda: self.process_file(process_file_label)
+        )
         process_file_button.grid(row=2, column=0, **file_select_button_options)
+        process_file_label = tk.Label(file_select_frame, text="")
+        process_file_label.grid(row=2, column=1, **file_select_label_options)
 
         # Configure row and column weights to make frames expand
         root.grid_rowconfigure(0, weight=1)
@@ -106,4 +113,12 @@ class TkinterApp():
         except Exception as e:
             print(f"Error: {str(e)}")
             return None
+        
+
+    def process_file(self, label):
+        try:
+            calculations(self.input_filepath, self.output_filepath)
+            label.config(text=f"Success!")
+        except:
+            label.config(text=f"Something went wrong :(")
 
