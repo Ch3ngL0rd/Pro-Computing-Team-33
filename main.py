@@ -1,5 +1,5 @@
-import file_selector
-import calculate
+from app.gui import file_selector
+from app.logic import calculate
 import platform
 import subprocess
 
