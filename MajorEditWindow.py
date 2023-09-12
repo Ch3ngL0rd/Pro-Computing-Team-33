@@ -187,6 +187,7 @@ def main():
             box.place(x=50, y=50 + i * 25)
         for i, box in enumerate(drop_boxes):
             box.place(x=i//4 * 200 + 250, y= 50 + i%4 * 150)
+            box.lower()
             
         drop_box_entry = tk.Entry(root)
         drop_box_entry.place(x=250, y=10)
@@ -195,7 +196,6 @@ def main():
             #Get the word input
             word = drop_box_entry.get()
             if word:
-                print("YO")
                 handbook.create_rule(cursor, word)
 
                 new_id = cursor.lastrowid
