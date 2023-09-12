@@ -153,6 +153,7 @@ def console_output(heading, word):
 def main():
     # Create the database and get the cursor
     conn = handbook.initialize_db()
+    
     cursor = conn.cursor()
     
     # Initialize GUI Window & set title/dimensions
@@ -219,7 +220,7 @@ def main():
     # datatype of menu text
     clicked = tk.StringVar()
     # initial menu text
-    clicked.set("")
+    clicked.set("Select a major or create a new one")
     
     # Create Dropdown menu
     drop = tk.OptionMenu(root, clicked, *options)

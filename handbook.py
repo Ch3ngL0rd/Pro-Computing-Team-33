@@ -89,6 +89,33 @@ def select_all_rules(conn, major, yr):
 
     return output
 
+def select_all_major_units(conn, major, yr):
+
+    #Gets cursor for conn
+    cursor = conn.cursor()
+    
+    # Query to retrieve the rule values and lists of units for each rule from the db according to provided major & year
+    query = """
+        SELECT distinct u.unit_code
+        FROM Rules r
+        INNER JOIN MajorRules rm ON r.rule_id = rm.rule_id
+        INNER JOIN RuleUnits ur ON r.rule_id = ur.rule_id
+        INNER JOIN Units u ON ur.unit_code = u.unit_code
+        INNER JOIN Major m ON rm.major_id = m.major_ID
+        WHERE m.name = ? AND m.year = ?
+    """
+
+    # Execute the query with parameters
+    cursor.execute(query, (major, yr))
+
+    # Fetch all the results
+    results = cursor.fetchall()
+    print(results)
+    # Process the results and prepare the output
+    output = [row[0] for row in results]
+    
+    return output
+
 def create_unit(cursor, unit_code, credit_pts):
     #Creates a new unit in the major database based off of provided code/credit pts
     cursor.execute("INSERT INTO Units(unit_code, credit_pts) VALUES(?, ?)", (unit_code, credit_pts))
