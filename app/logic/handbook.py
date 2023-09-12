@@ -1,3 +1,5 @@
+# possibly deprecated
+
 import sqlite3
 
 # Connect to an in-memory SQLite database
