@@ -4,8 +4,6 @@ import platform
 import subprocess
 
 
-
-
 def main():
     
     try:
@@ -21,11 +19,7 @@ def main():
 
         else:
             print(f"You are on {os_type}. The shell command will not be executed.")
-    
-    
-
-
-    
+        
     selected_file_path = file_selector.open_file()
 
     if selected_file_path:
