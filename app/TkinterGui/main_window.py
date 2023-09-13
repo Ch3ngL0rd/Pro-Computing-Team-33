@@ -3,12 +3,13 @@ from tkinter import filedialog
 
 import os
 
-from app.logic.calculate import calculations
 from app.TkinterGui.output_window import Output_window
 
 
 class Main_window():
-    def __init__(self) -> None:
+    def __init__(self, marks_processor) -> None:
+        self.marks_processor = marks_processor
+
         # set default path to home
         # if output path is set first - keep the same
         # else if input path is set first - set output path to the same
@@ -138,7 +139,7 @@ class Main_window():
 
     def process_file(self, label):
         try:
-            calculations(self.input_filepath, self.output_filepath)
+            self.marks_processor.process_file(self.input_filepath, self.output_filepath)
             label.config(text=f"Success!")
 
             output_window = Output_window()

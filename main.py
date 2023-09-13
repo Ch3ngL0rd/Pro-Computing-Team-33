@@ -1,18 +1,15 @@
 from app.TkinterGui.main_window import Main_window
 from app.databases.sqlite_handbookDB import Sqlite_handbookDB
-# from app.logic.calculate import calculations
-import platform
-import subprocess
+from app.logic.marks_processor import Marks_processor
 
 
 def main():
     handbook_db = Sqlite_handbookDB()
-
-    # init calculation object and parse handbook db
-
     handbook_db.populate_sampleDB()
 
-    main_window = Main_window()
+    marks_processor = Marks_processor(handbookDB=handbook_db)
+
+    main_window = Main_window(marks_processor=marks_processor)
     main_window.draw_window()
 
 
