@@ -141,6 +141,9 @@ class Main_window():
             calculations(self.input_filepath, self.output_filepath)
             label.config(text=f"Success!")
 
+            output_window = Output_window()
+            output_window.draw_window()
+
         except IsADirectoryError:
             label.config(text=f"Input file not selected")
 
