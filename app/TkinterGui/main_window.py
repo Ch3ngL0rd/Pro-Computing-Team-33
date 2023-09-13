@@ -4,16 +4,21 @@ from tkinter import filedialog
 import os
 
 from app.logic.calculate import calculations
+from app.TkinterGui.output_window import Output_window
 
 
-class TkinterApp():
+class Main_window():
     def __init__(self) -> None:
         # set default path to home
+        # if output path is set first - keep the same
+        # else if input path is set first - set output path to the same
         self.input_filepath = os.path.expanduser("~")
-        self.output_filepath = os.path.expanduser("~")
+        self.output_filepath = None
+
+        self.process_file_button = None
 
 
-    def run_tkinter_app(self):
+    def draw_window(self):
         root = tk.Tk()
         root.geometry("1000x400")
         root.title("BE(Hons) - Marks Processor")
@@ -60,11 +65,13 @@ class TkinterApp():
 
 
         # make sure this is grey or not submittable until both input and output variables are specified
-        process_file_button = tk.Button(
+        self.process_file_button = tk.Button(
             file_select_frame, width=file_select_button_width, text="Process",
             command=lambda: self.process_file(process_file_label)
         )
-        process_file_button.grid(row=2, column=0, **file_select_button_options)
+        self.process_file_button.grid(row=2, column=0, **file_select_button_options)
+        self.process_file_button.config(state="disabled")
+
         process_file_label = tk.Label(file_select_frame, text="")
         process_file_label.grid(row=2, column=1, **file_select_label_options)
 
@@ -78,6 +85,10 @@ class TkinterApp():
 
         root.mainloop()
 
+    
+    def are_files_selected(self):
+        return os.path.isfile(self.input_filepath) and self.output_filepath
+
 
     def select_input_file(self, label):
         truncate_value = 30 # 30 characters
@@ -89,7 +100,14 @@ class TkinterApp():
                 initialdir=self.input_filepath
             )
             self.input_filepath = file_path
+
+            # if output filepath is None - set it to same as input
+            if self.output_filepath: self.output_filepath = file_path
+
             label.config(text=f"Selected Input File: ...{self.input_filepath[-truncate_value:]}")
+
+            if self.are_files_selected():
+                self.process_file_button.config(state="normal")
 
             return file_path
         except Exception as e:
@@ -109,6 +127,9 @@ class TkinterApp():
             self.output_filepath = file_path
             label.config(text=f"Selected Output File: ...{self.output_filepath[-truncate_value:]}")
 
+            if self.are_files_selected():
+                self.process_file_button.config(state="normal")
+
             return file_path
         except Exception as e:
             print(f"Error: {str(e)}")
@@ -119,6 +140,14 @@ class TkinterApp():
         try:
             calculations(self.input_filepath, self.output_filepath)
             label.config(text=f"Success!")
-        except:
-            label.config(text=f"Something went wrong :(")
+
+        except IsADirectoryError:
+            label.config(text=f"Input file not selected")
+
+        except Exception as e:
+            print(str(e))
+            if not (self.input_filepath and self.output_filepath):
+                label.config(text=f"File not selected")
+            else:
+                label.config(text=f"Something went wrong :(")
 
