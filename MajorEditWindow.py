@@ -138,9 +138,6 @@ class DropBox(tk.Frame):
         
         #Adjust scroll region
         self.canvas.config(scrollregion=self.canvas.bbox('all'))
-        self.cursor.execute("SELECT * FROM RuleUnits")
-        results = self.cursor.fetchall()
-        print(results)
 
 #Debugging print functions
 def console_output_remove(heading, word):
@@ -156,18 +153,25 @@ def main():
     
     cursor = conn.cursor()
     
+    
     # Initialize GUI Window & set title/dimensions
     root = tk.Tk()
     root.title("Modify major")
     root.geometry("1920x1080")
-    
+        # Dropdown menu options
+    options = handbook.fetch_all_majors(cursor)
+    options = [major[0] + "|" + str(major[1]) for major in options]
     # Function to refresh the screen based on the dropdown selection
-    def refresh_screen():
+    def refresh_screen(text):
         # Split the selected option to get name/year
-        print(clicked.get())
-        name, year = clicked.get().split("|")
+        name, year = text.split("|")
         
         # Fetch all units and rules associated with the selected name/year
+        options = handbook.fetch_all_majors(cursor)
+        if (name, int(year)) not in options:
+            handbook.create_major(cursor,name,year)
+            options.append(text)
+            drop['menu'].add_command(label=text, command=tk._setit(clicked, text))
         units = handbook.fetch_all_units(cursor)
         rules = handbook.fetch_major_rules(cursor, name, year)
         mID = handbook.get_major_id(cursor, name, year)
@@ -213,9 +217,6 @@ def main():
         drop_box_button = tk.Button(root, text="Enter", command=lambda: create_draggable_box(mID))
         drop_box_button.place(x=375, y=10)
     
-    # Dropdown menu options
-    options = handbook.fetch_all_majors(cursor)
-    options = [major[0] + "|" + str(major[1]) for major in options]
     
     # datatype of menu text
     clicked = tk.StringVar()
@@ -227,8 +228,19 @@ def main():
     drop.pack()
     
     # Create button to refresh the screen based on the dropdown selection
-    button = tk.Button(root, text="OK", command=refresh_screen)
+    button = tk.Button(root, text="OK", command=lambda: refresh_screen(clicked.get()))
     button.pack()
+    
+    major_entry = tk.Entry(root)
+    major_entry.insert(0, 'Enter Major Name')
+    major_entry.place(x=1000, y=10)
+    
+    year_entry = tk.Entry(root)
+    year_entry.insert(0, 'Enter Year')
+    year_entry.place(x=1000, y=30)
+    
+    create_button = tk.Button(root, text="Create New Unit", command=lambda: refresh_screen((major_entry.get()+"|"+year_entry.get())))
+    create_button.place(x=1000, y=50)
     
     # Initialize drop_boxes list
     headings = handbook.fetch_all_rules(cursor)
