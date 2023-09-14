@@ -135,6 +135,13 @@ def link_major_rule(cursor, major_id, rule_id):
 def unlink_unit_rule(cursor, unit_code, rule_id):
     cursor.execute("DELETE FROM RuleUnits where unit_code = ? AND rule_id = ?", (unit_code, rule_id))
     
+def unlink_major_rule(cursor, name, yr, rule_id):
+    cursor.execute("SELECT major_id from Major where name = ? and year = ?", (name, yr))
+    results = cursor.fetchall()
+    major_id = results[0][0]
+    
+    cursor.execute("DELETE FROM MajorRules where major_id = ? AND rule_id = ?", (major_id, rule_id))
+    
 def fetch_all_units(cursor):
     cursor.execute("SELECT unit_code FROM units")
     rows = cursor.fetchall()

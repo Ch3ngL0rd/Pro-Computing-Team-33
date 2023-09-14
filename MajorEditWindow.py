@@ -2,6 +2,12 @@ import tkinter as tk
 import sqlite3
 import handbook
 
+
+def adjust_drop_boxes_positions():
+    global drop_boxes
+    for i, box in enumerate(drop_boxes):
+        box.place(x=i//4 * 200 + 250, y= 50 + i%4 * 150)
+
 #Defines a class for a draggable box
 class DraggableBox(tk.Label):
     def __init__(self, parent, word, drop_boxes):
@@ -52,7 +58,7 @@ class DraggableBox(tk.Label):
             self.place(x=self.store_x, y=self.store_y)
 
 class DropBox(tk.Frame):
-    def __init__(self, parent, heading,id, cursor):
+    def __init__(self, parent, heading,id,refresh_screen,cursor):
         #Intialize drop box as a tk.Frame
         super().__init__(parent)
         
@@ -60,6 +66,7 @@ class DropBox(tk.Frame):
         self.heading = heading
         self.cursor = cursor
         self.id = id
+        self.refresh_screen = refresh_screen    
         
         #Create object and scrollbar
         self.canvas = tk.Canvas(self, bg='black', width=150, height=100)
@@ -86,6 +93,23 @@ class DropBox(tk.Frame):
         #Create a label for the heading of the box (currently just ID - needs value added)
         tk.Label(self, text=heading, bg='white', width=20).pack(side='top')
         self.canvas.pack(side='top', fill='both', expand=True)
+        # Create a delete button for the drop box
+        
+        self.delete_btn = tk.Button(self, text="Delete Box", command=self.delete_drop_box)
+        self.delete_btn.pack(side='bottom')
+
+    def delete_drop_box(self):
+        global  major, yr
+        # Remove labels and this drop box
+        for label, _, _, _ in self.labels:
+            label.destroy()
+        self.destroy()
+        # Adjust position of remaining drop boxes
+        handbook.unlink_major_rule(self.cursor, major, yr, self.id)
+        
+        self.refresh_screen(major+"|"+str(yr))
+
+
 
     def is_inside(self, x, y):
         #Get location of the box
@@ -153,7 +177,8 @@ def main():
     
     cursor = conn.cursor()
     
-    
+    major = None
+    yr = None
     # Initialize GUI Window & set title/dimensions
     root = tk.Tk()
     root.title("Modify major")
@@ -161,10 +186,20 @@ def main():
         # Dropdown menu options
     options = handbook.fetch_all_majors(cursor)
     options = [major[0] + "|" + str(major[1]) for major in options]
+    
+        # datatype of menu text
+    clicked = tk.StringVar()
+    
+    # initial menu text
+    clicked.set("Select a major or create a new one")
+
     # Function to refresh the screen based on the dropdown selection
     def refresh_screen(text):
         # Split the selected option to get name/year
         name, year = text.split("|")
+        global major, yr
+        major = name
+        yr = year
         
         # Fetch all units and rules associated with the selected name/year
         options = handbook.fetch_all_majors(cursor)
@@ -172,6 +207,7 @@ def main():
             handbook.create_major(cursor,name,year)
             options.append(text)
             drop['menu'].add_command(label=text, command=tk._setit(clicked, text))
+            clicked.set(text)
         units = handbook.fetch_all_units(cursor)
         rules = handbook.fetch_major_rules(cursor, name, year)
         mID = handbook.get_major_id(cursor, name, year)
@@ -184,7 +220,7 @@ def main():
         
         # Create new draggable boxes and drop boxes based on the fetched units and rules
         draggable_boxes[:] = [DraggableBox(root, unit, drop_boxes) for unit in units]
-        drop_boxes[:] = [DropBox(root, "rule " + str(rule[0])+" | value: "+str(rule[1]), rule[0], cursor) for rule in rules]
+        drop_boxes[:] = [DropBox(root, "rule " + str(rule[0])+" | value: "+str(rule[1]), rule[0],refresh_screen, cursor) for rule in rules]
         
         # Place the new boxes on the screen
         for i, box in enumerate(draggable_boxes):
@@ -206,7 +242,7 @@ def main():
                 
                 handbook.link_major_rule(cursor,mId, new_id)
                 #Create a new draggable box with that word & place it on the screen below all other boxes
-                box = DropBox(root, "rule " + str(new_id)+" | value: "+str(word), new_id, cursor)
+                box = DropBox(root, "rule " + str(new_id)+" | value: "+str(word), new_id,refresh_screen, cursor)
                 num_boxes = len(drop_boxes)
                 box.place(x=num_boxes//4 * 200 + 250, y = num_boxes%4 * 150 + 50)
                 box.lower()
@@ -216,12 +252,14 @@ def main():
     
         drop_box_button = tk.Button(root, text="Enter", command=lambda: create_draggable_box(mID))
         drop_box_button.place(x=375, y=10)
+        
+        # Place the new boxes on the screen
+        for i, box in enumerate(draggable_boxes):
+            box.place(x=50, y=50 + i * 25)
+        
     
     
-    # datatype of menu text
-    clicked = tk.StringVar()
-    # initial menu text
-    clicked.set("Select a major or create a new one")
+
     
     # Create Dropdown menu
     drop = tk.OptionMenu(root, clicked, *options)
@@ -244,7 +282,7 @@ def main():
     
     # Initialize drop_boxes list
     headings = handbook.fetch_all_rules(cursor)
-    drop_boxes = [DropBox(root, "rule " + str(heading[0])+" | value: "+str(heading[1]), heading[0], cursor) for heading in headings]
+    drop_boxes = [DropBox(root, "rule " + str(heading[0])+" | value: "+str(heading[1]), heading[0],refresh_screen ,cursor) for heading in headings]
     
     # Fetch all units in the db and create draggable boxes for each of them
     words = handbook.fetch_all_units(cursor)
