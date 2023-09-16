@@ -74,10 +74,33 @@ class Marks_processor():
         # Determine GENG4412 completion and mark for each student
         geng4412_data = input_data[input_data['Unit_Code'] == 'GENG4412'][['Person_ID', 'Mark']]
         merged_data_adjusted = pd.merge(eh_wam_adjusted, geng4412_data, on='Person_ID', how='left')
+
+        print(merged_data_adjusted)
+
+        # 1. Take the Surname, Given Names, Course_Code, Course_Title, Major_Deg from the lowest row number for each Person_ID
+        # Join on Person_ID
+        personal_data = input_data.groupby('Person_ID').last().reset_index()[['Person_ID', 'Surname', 'Given Names', 'Course_Code', 'Course_Title', 'Major_Deg']]
+        merged_data_adjusted = pd.merge(personal_data, merged_data_adjusted, on='Person_ID', how='left')
+
         merged_data_adjusted.rename(columns={'Mark': 'GENG4412 Mark'}, inplace=True)
+
+        # Creates another column called 'Completed GENG4412 (Y/N)' and fills it with 'Y' if the student has completed GENG4412
+        # Highlights with a 'N' if the student has not completed GENG4412 in red
+        merged_data_adjusted['Completed GENG4412 (Y/N)'] = merged_data_adjusted['GENG4412 Mark'].apply(lambda x: 'Y' if not pd.isna(x) else 'N')
+        merged_data_adjusted.style.apply(lambda x: ['color: red' if v == 'N' else '' for v in x], axis=1, subset=['Completed GENG4412 (Y/N)'])
 
         # Assign Honours classification
         merged_data_adjusted['Honours Class'] = merged_data_adjusted.apply(self.assign_honours, axis=1)
+
+        # Turns Person_ID into a string
+        merged_data_adjusted['Person_ID'] = merged_data_adjusted['Person_ID'].astype(str)
+
+        # Adds two empty columns - 'Missing Information (Y/N)' - 'Comments (missing information)'
+        merged_data_adjusted['Missing Information (Y/N)'] = ''
+        merged_data_adjusted['Comments (missing information)'] = ''
+
+        # Order of columns
+        merged_data_adjusted = merged_data_adjusted[['Person_ID', 'Surname', 'Given Names', 'Course_Code', 'Course_Title', 'Major_Deg', 'Completed GENG4412 (Y/N)','GENG4412 Mark', 'EH-WAM',  'Honours Class', 'Missing Information (Y/N)', 'Comments (missing information)']]
 
         # Save the processed data to an output Excel file (optional)
         merged_data_adjusted.to_excel(output_filepath, index=False)
