@@ -89,6 +89,8 @@ class Application:
         # Create a Treeview to display all units
         self.all_units_tree = ttk.Treeview(all_units_frame, columns=(
             "Unit Name", "Credit Points"), show="headings")
+
+
         self.all_units_tree.heading("#1", text="Unit Name")
         self.all_units_tree.heading("#2", text="Credit Points")
         self.all_units_tree.pack(fill="both", expand=True, padx=5, pady=5)
@@ -265,7 +267,23 @@ class Application:
             row=2, columnspan=2)
 
     # Units Functionality
+    
+
+    
     def initialize_units_tab(self):
+        
+        def delete_unit_tree(unit_name):
+            print(f"Deleting {unit_name}")
+            handbook.delete_unit(self.cursor, unit_name)
+            self.refresh_unit_section()
+        
+        def on_delete_tree_select(event):
+            item = self.unit_delete_tree.selection()[0]
+            values = self.tree.item(item, 'values')
+            unit_name = values[0]
+            delete_unit_tree(unit_name)
+        
+        
         # Create a frame to hold the search bar and button
         top_frame = tk.Frame(self.units_frame)
         top_frame.pack(fill='x')
@@ -290,7 +308,20 @@ class Application:
             "Unit Name", "Credit Points"), show="headings", height=10)
         self.tree.heading("#1", text="Unit Name")
         self.tree.heading("#2", text="Credit Points")
-        self.tree.pack(fill='x')
+        
+        self.unit_delete_tree = ttk.Treeview(self.units_frame, columns=("Actions"), show="headings")
+        self.unit_delete_tree.heading("#1", text="Actions")
+        
+        self.unit_delete_tree.bind("<ButtonRelease-1>", on_delete_tree_select)
+
+        #delete_tree.bind("<ButtonRelease-1>", on_delete_tree_select)
+
+        #tree.pack(side="left", fill="x")
+        self.tree.pack(side = "left", fill='both',  expand = True)
+        self.unit_delete_tree.pack(side="left", fill="both",)
+        
+        
+
 
         self.populate_units()
 
@@ -313,7 +344,16 @@ class Application:
     def populate_units(self):
         for unit in handbook.fetch_all_units_with_credit(self.cursor):
             self.tree.insert("", "end", values=unit)
-
+            self.unit_delete_tree.insert("", "end", values="Delete")
+    
+    def refresh_unit_section(self, *args):
+        # Clear existing rules if any
+        for widget in self.units_frame.winfo_children():
+            widget.destroy()
+            
+        self.initialize_units_tab()
+        self.refresh_rules_section()
+        
     def show_add_unit_dialog(self):
         dialog = tk.Toplevel(self.root)
         dialog.transient(self.root)

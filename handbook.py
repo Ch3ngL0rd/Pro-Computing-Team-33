@@ -24,7 +24,7 @@ def create_db():
     CREATE TABLE RuleUnits (
         unit_code TEXT,
         rule_id INTEGER,
-        FOREIGN KEY(unit_code) REFERENCES Units(unit_code),
+        FOREIGN KEY(unit_code) REFERENCES Units(unit_code) ON DELETE CASCADE,
         FOREIGN KEY(rule_id) REFERENCES Rule(rule_id),
         PRIMARY KEY(unit_code, rule_id)
     );
@@ -141,7 +141,10 @@ def unlink_major_rule(cursor, name, yr, rule_id):
     major_id = results[0][0]
     
     cursor.execute("DELETE FROM MajorRules where major_id = ? AND rule_id = ?", (major_id, rule_id))
-    
+
+def delete_unit(cursor, unit_code):
+    cursor.execute("DELETE FROM units where unit_code=?", (unit_code,))
+  
 def fetch_all_units(cursor):
     cursor.execute("SELECT unit_code FROM units")
     rows = cursor.fetchall()
