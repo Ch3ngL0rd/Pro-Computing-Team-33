@@ -57,6 +57,25 @@ def create_db():
 
     return conn
 
+def duplicate_major(cursor, src_major, src_yr, nw_major, nw_yr):
+    create_major(cursor, nw_major, nw_yr)
+    nw_major_id = cursor.lastrowid
+    
+    #Get a list of all rules for the current major
+    rules_to_create = fetch_major_rules(cursor, src_major, src_yr)
+    
+    #Iterate through every rule that needs to be created
+    for rule in rules_to_create:
+        create_rule(cursor, rule[1])
+        new_rule_id = cursor.lastrowid
+        link_major_rule(cursor,nw_major_id,new_rule_id)
+        
+        #Get all units to link
+        units_to_link = fetch_unit_rules(cursor, rule[0])
+        for unit in units_to_link:
+            link_unit_rule(cursor, unit, new_rule_id)
+    
+
 def select_all_rules(conn, major, yr):
 
     #Gets cursor for conn
@@ -312,7 +331,7 @@ def initialize_db():
     link_unit_rule(cursor,'GENG5514', 1)
     link_unit_rule(cursor,'MECH4428', 1)
     link_unit_rule(cursor,'MECH5504', 1)
-
+    create_major(cursor,'Math', 2023)
     # Commit the changes
     conn.commit()
 
