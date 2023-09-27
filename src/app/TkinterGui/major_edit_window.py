@@ -15,7 +15,7 @@ class Major_edit_window:
 
     def initialize_UI(self):
         self.root = tk.Tk()
-        self.root.title("Settings")
+        self.root.title("Handbook Settings")
         self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 
         notebook = ttk.Notebook(self.root)

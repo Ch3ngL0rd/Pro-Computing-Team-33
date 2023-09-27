@@ -142,10 +142,10 @@ class Main_window():
 
     def process_file(self, label):
         try:
-            self.marks_processor.process_file(self.input_filepath, self.output_filepath)
+            output_df = self.marks_processor.process_file(self.input_filepath, self.output_filepath)
             label.config(text=f"Success!")
 
-            output_window = Output_window()
+            output_window = Output_window(output_df)
             output_window.draw_window()
 
         except IsADirectoryError:
