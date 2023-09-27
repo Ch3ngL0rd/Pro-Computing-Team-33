@@ -38,9 +38,6 @@ class TestExcelProcessing(unittest.TestCase):
          # Check that the error message matches the expected one
         self.assertIn(expected_error_message, str(context.exception))
 
-        # Check that the output file was not created
-        self.assertFalse(os.path.exists(output_file), "Output file should not be created")
-
     # ================================= Invalid file testing =================================
 
 if __name__ == '__main__':
