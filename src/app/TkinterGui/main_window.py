@@ -163,6 +163,6 @@ class Main_window():
         try:
             major_edit_window = Major_edit_window(handbook_db=self.handbook_db)
             major_edit_window.initialize_UI()
-        except:
-            print("failed")
+        except Exception as e:
+            print(e)
 

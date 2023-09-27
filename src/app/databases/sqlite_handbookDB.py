@@ -14,26 +14,23 @@ class Sqlite_handbookDB():
         cursor.execute('''
         CREATE TABLE Units (
             unit_code TEXT PRIMARY KEY,
-            credit_pts INTEGE
+            credit_pts INTEGER
         );
         ''')
 
 
         cursor.execute('''
-
         CREATE TABLE Groups (
             group_id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT
-
         );
         ''')
     
         cursor.execute('''
-
         CREATE TABLE RuleUnits (
             unit_code TEXT,
             rule_id INTEGER,
-            FOREIGN KEY(unit_code) REFERENCES Units(unit_code),
+            FOREIGN KEY(unit_code) REFERENCES Units(unit_code) ON DELETE CASCADE,
             FOREIGN KEY(rule_id) REFERENCES Rule(rule_id),
             PRIMARY KEY(unit_code, rule_id)
         );
@@ -163,13 +160,36 @@ class Sqlite_handbookDB():
         cursor = self.conn.cursor()
 
         cursor.execute("DELETE FROM RuleUnits where unit_code = ? AND rule_id = ?", (unit_code, rule_id))
-    
+
+
+    def unlink_major_rule(self, name, yr, rule_id):
+        cursor = self.conn.cursor()
+        
+        cursor.execute("SELECT major_id from Major where name = ? and year = ?", (name, yr))
+        results = cursor.fetchall()
+        major_id = results[0][0]
+        
+        cursor.execute("DELETE FROM MajorRules where major_id = ? AND rule_id = ?", (major_id, rule_id))
+
+
+    def delete_unit(cursor, unit_code):
+        cursor.execute("DELETE FROM units where unit_code=?", (unit_code,))
+
 
     def fetch_all_units(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT unit_code FROM units")
         rows = cursor.fetchall()
         results = [row[0] for row in rows]
+        return results
+
+
+    def fetch_all_units_with_credit(self):
+        cursor = self.conn.cursor()
+
+        cursor.execute("SELECT unit_code, credit_pts FROM units")
+        rows = cursor.fetchall()
+        results = [row for row in rows]
         return results
 
 
@@ -185,6 +205,60 @@ class Sqlite_handbookDB():
 
         rows = cursor.fetchall()
         results = [row for row in rows]
+        return results
+    
+
+    def delete_rule(self, rule_id):
+        cursor = self.conn.cursor()
+
+        cursor.execute("DELETE FROM Rules where rule_id = ?", (rule_id,))
+
+
+    def fetch_years(self):
+        cursor = self.conn.cursor()
+
+        cursor.execute("SELECT DISTINCT year from Major")
+        rows = cursor.fetchall()
+        results = [row[0] for row in rows]
+        return results
+
+
+    def fetch_majors_for_year(self, year):
+        cursor = self.conn.cursor()
+
+        cursor.execute("SELECT name from Major where year = ?", (year,))
+        rows = cursor.fetchall()
+        results = [row[0] for row in rows]
+        return results
+
+
+    def fetch_major_rules_verbose(self, major, year):
+        cursor = self.conn.cursor()
+        """ Fetches the rules for a major in a given year, including the unit codes for each rule and credit points for each unit"""
+        cursor.execute("""
+            SELECT r.*, GROUP_CONCAT(u.UNIT_CODE), GROUP_CONCAT(u.CREDIT_PTS)
+            FROM Rules r
+            INNER JOIN MajorRules rm ON r.rule_id = rm.rule_id
+            INNER JOIN RuleUnits ur ON r.rule_id = ur.rule_id
+            INNER JOIN Units u ON ur.unit_code = u.unit_code
+            INNER JOIN Major m ON rm.major_id = m.major_ID
+            WHERE m.name = ? AND m.year = ?
+            GROUP BY r.rule_id
+            """, (major, year))
+        rows = cursor.fetchall()
+        results = []
+        for row in rows:
+            rule_id = row[0]
+            credit_points = row[1]
+            unit_names = row[2].split(',')
+            unit_credits = list(map(int, row[3].split(',')))
+
+            # Zip unit_names and unit_credits into a list of tuples
+            unit_list = list(zip(unit_names, unit_credits))
+
+            # Create the final dictionary for each rule
+            results.append((rule_id,credit_points, unit_list))
+
         return results
 
 
