@@ -4,11 +4,13 @@ from tkinter import filedialog
 import os
 
 from app.TkinterGui.output_window import Output_window
+from app.TkinterGui.major_edit_window import Major_edit_window
 
 
 class Main_window():
-    def __init__(self, marks_processor) -> None:
+    def __init__(self, marks_processor, handbook_db) -> None:
         self.marks_processor = marks_processor
+        self.handbook_db = handbook_db
 
         # set default path to home
         # if output path is set first - keep the same
@@ -35,7 +37,8 @@ class Main_window():
         settings_button = tk.Button(menu_frame, text="Settings", command=root.quit)
         settings_button.grid(row=0, column=0, sticky='w', **menu_frame_button_options)
 
-        modify_handbook_button = tk.Button(menu_frame, text="Modify Handbook", command=root.quit)
+        modify_handbook_button = tk.Button(menu_frame, text="Modify Handbook",
+                                           command=self.open_major_edit_window)
         modify_handbook_button.grid(row=0, column=1, sticky='w', **menu_frame_button_options)
 
 
@@ -154,4 +157,12 @@ class Main_window():
                 label.config(text=f"File not selected")
             else:
                 label.config(text=f"Something went wrong :(")
+
+    
+    def open_major_edit_window(self):
+        try:
+            major_edit_window = Major_edit_window(handbook_db=self.handbook_db)
+            major_edit_window.initialize_UI()
+        except:
+            print("failed")
 

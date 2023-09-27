@@ -1,26 +1,23 @@
 import tkinter as tk
 from tkinter import ttk
-import sqlite3
-import handbook
 
 WINDOW_HEIGHT = 1080
 WINDOW_WIDTH = 1920
 
 
-class Application:
-    def __init__(self, root):
-        conn = handbook.initialize_db()
-        self.cursor = conn.cursor()
-        self.root = root
-        self.root.title("Settings")
-        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+class Major_edit_window:
+    def __init__(self, handbook_db):
+        self.handbook_db = handbook_db
         # Array of rule_id, x,y,width,height
         # Used to store the position of each rule table for drag and drop
         self.dragging_unit = None  # To keep track of the unit being dragged
         self.tables = []
-        self.initialize_UI()
 
     def initialize_UI(self):
+        self.root = tk.Tk()
+        self.root.title("Settings")
+        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+
         notebook = ttk.Notebook(self.root)
         self.units_frame = ttk.Frame(notebook)
         self.majors_frame = ttk.Frame(notebook)
@@ -30,6 +27,7 @@ class Application:
 
         self.initialize_units_tab()
         self.initialize_majors_tab()
+        self.root.mainloop()
 
     def initialize_majors_tab(self):
         top_frame = tk.Frame(self.majors_frame)
@@ -39,7 +37,7 @@ class Application:
         dropdown_frame = tk.Frame(top_frame)
         dropdown_frame.pack(side="left", fill="x")
 
-        year_options = handbook.fetch_years(self.cursor)
+        year_options = self.handbook_db.fetch_years(self.cursor)
 
         # Create and place the Year dropdown within the dropdown_frame
         self.year_var = tk.StringVar()
@@ -100,14 +98,14 @@ class Application:
         self.populate_all_units()
 
     def populate_all_units(self):
-        for unit in handbook.fetch_all_units_with_credit(self.cursor):
+        for unit in self.handbook_db.fetch_all_units_with_credit(self.cursor):
             self.all_units_tree.insert("", "end", values=unit)
 
     def update_search_major(self, event):
         search_term = event.widget.get().lower()
         # Clear current tree view
         self.all_units_tree.delete(*self.all_units_tree.get_children())
-        for unit in handbook.fetch_all_units_with_credit(self.cursor):
+        for unit in self.handbook_db.fetch_all_units_with_credit(self.cursor):
             unit_name, credit_points = unit
             if search_term in unit_name.lower():
                 self.all_units_tree.insert(
@@ -137,7 +135,7 @@ class Application:
             widget.destroy()
 
         # Fetch new rules and populate
-        rules_data = handbook.fetch_major_rules_verbose(
+        rules_data = self.handbook_db.fetch_major_rules_verbose(
             cursor=self.cursor,
             major=self.major_var.get(),
             year=self.year_var.get()
@@ -151,12 +149,12 @@ class Application:
     def create_rule_table(self, frame, rule_name, credit_points, units, rule_id):
         def delete_rule():
             print(f"Deleting {rule_name}")
-            handbook.delete_rule(self.cursor, rule_id)
+            self.handbook_db.delete_rule(self.cursor, rule_id)
             self.refresh_rules_section()
 
         def delete_unit(unit_name, rule_id):
             print(f"Deleting {unit_name} from {rule_name}")
-            handbook.unlink_unit_rule(self.cursor, unit_name, rule_id)
+            self.handbook_db.unlink_unit_rule(self.cursor, unit_name, rule_id)
             self.refresh_rules_section()
 
         def on_delete_tree_select(event):
@@ -223,13 +221,13 @@ class Application:
         if unit is None:
             return
         print(f"Adding {unit} to {rule_id}")  # Debugging print statement
-        handbook.link_unit_rule(self.cursor, unit[0], rule_id)
+        self.handbook_db.link_unit_rule(self.cursor, unit[0], rule_id)
         self.refresh_rules_section()
     def update_major_dropdown(self, selected_year):
         # Update the Major dropdown based on the selected year
         # Fetch majors for the selected year from the database
         self.major_var.set("Select Major")
-        majors_for_year = handbook.fetch_majors_for_year(
+        majors_for_year = self.handbook_db.fetch_majors_for_year(
             self.cursor, selected_year)
 
         # Clear the current options in the major dropdown
@@ -260,7 +258,7 @@ class Application:
             major_name = major_name_entry.get()
             year = year_entry.get()
             # Add code here to insert the new major into the database
-            handbook.create_major(self.cursor, major_name, year)
+            self.handbook_db.create_major(self.cursor, major_name, year)
             dialog.destroy()
 
         tk.Button(dialog, text="OK", command=add_major).grid(
@@ -274,7 +272,7 @@ class Application:
         
         def delete_unit_tree(unit_name):
             print(f"Deleting {unit_name}")
-            handbook.delete_unit(self.cursor, unit_name)
+            self.handbook_db.delete_unit(self.cursor, unit_name)
             self.refresh_unit_section()
         
         def on_delete_tree_select(event):
@@ -336,13 +334,13 @@ class Application:
     def update_search(self, event):
         search_term = event.widget.get().lower()
         self.tree.delete(*self.tree.get_children())
-        for unit in handbook.fetch_all_units_with_credit(self.cursor):
+        for unit in self.handbook_db.fetch_all_units_with_credit(self.cursor):
             unit_name, credit_points = unit
             if search_term in unit_name.lower():
                 self.tree.insert("", "end", values=(unit_name, credit_points))
 
     def populate_units(self):
-        for unit in handbook.fetch_all_units_with_credit(self.cursor):
+        for unit in self.handbook_db.fetch_all_units_with_credit(self.cursor):
             self.tree.insert("", "end", values=unit)
             self.unit_delete_tree.insert("", "end", values="Delete")
     
@@ -374,19 +372,9 @@ class Application:
             unit_name = unit_name_entry.get()
             credit_points = credit_points_entry.get()
             self.tree.insert("", "end", values=(unit_name, credit_points))
-            handbook.create_unit(self.cursor, unit_name, credit_points)
+            self.handbook_db.create_unit(self.cursor, unit_name, credit_points)
             dialog.destroy()
 
         tk.Button(dialog, text="OK", command=add_unit).grid(
             row=2, columnspan=2, padx=10, pady=10)
         self.root.wait_window(dialog)
-
-
-def main():
-    root = tk.Tk()
-    app = Application(root)
-    root.mainloop()
-
-
-if __name__ == "__main__":
-    main()
