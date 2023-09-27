@@ -1,5 +1,5 @@
 import unittest
-import marksprocessor
+import marks_processor
 import os
 
 class TestExcelProcessing(unittest.TestCase):
@@ -8,7 +8,7 @@ class TestExcelProcessing(unittest.TestCase):
     def test_valid_file_xls(self):
         input_file = 'valid_file.xls'
         
-        result = marksprocessor.process_excel(input_file)
+        result = marks_processor.process_file(input_file)
 
         # Check that the output file was created
         self.assertTrue(os.path.exists(output_file), "Output file should be created")
@@ -16,7 +16,7 @@ class TestExcelProcessing(unittest.TestCase):
     def test_valid_file_xlsx(self):
         input_file = 'valid_file.xlsx'
         
-        result = marksprocessor.process_excel(input_file)
+        result = marks_processor.process_file(input_file)
 
         # Check that the output file was created
         self.assertTrue(os.path.exists(output_file), "Output file should be created")
@@ -30,7 +30,7 @@ class TestExcelProcessing(unittest.TestCase):
 
         # Attempt to process the input file, expecting an exception 
         with self.assertRaises(Exception) as context:
-            marksprocessor.process_excel(input_file)
+            marks_processor.process_file(input_file)
 
         # Define the expected error message
         expected_error_message = "Input file is not an Excel file"
