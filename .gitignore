@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 __pychache__
 src/build
 src/dist
+=======
+
+poetry.lock
+>>>>>>> Styles_Add_Functionality
