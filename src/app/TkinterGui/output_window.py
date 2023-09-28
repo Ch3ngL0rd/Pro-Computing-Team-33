@@ -32,7 +32,7 @@ class Output_window():
         
         # output frame
         output_window = tk.LabelFrame(window_frame, text="Output Preview")
-        output_window.pack(expand=True, fill=tk.X)
+        output_window.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
         self.draw_preview(output_window)
 
         root.mainloop()

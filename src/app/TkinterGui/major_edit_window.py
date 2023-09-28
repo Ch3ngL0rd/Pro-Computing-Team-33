@@ -6,19 +6,22 @@ WINDOW_WIDTH = 1920
 
 
 class Major_edit_window:
-    def __init__(self, handbook_db):
+    def __init__(self, handbook_db, root):
         self.handbook_db = handbook_db
         # Array of rule_id, x,y,width,height
         # Used to store the position of each rule table for drag and drop
         self.dragging_unit = None  # To keep track of the unit being dragged
         self.tables = []
+        self.root = root
 
     def initialize_UI(self):
-        self.root = tk.Tk()
-        self.root.title("Handbook Settings")
-        self.root.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+        self.handbook_window = tk.Toplevel(self.root)
+        self.handbook_window.transient(self.root)
+        self.handbook_window.grab_set()
+        self.handbook_window.title("Handbook Settings")
+        self.handbook_window.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
 
-        notebook = ttk.Notebook(self.root)
+        notebook = ttk.Notebook(self.handbook_window)
         self.units_frame = ttk.Frame(notebook)
         self.majors_frame = ttk.Frame(notebook)
         notebook.add(self.units_frame, text="Units")
@@ -27,7 +30,7 @@ class Major_edit_window:
 
         self.initialize_units_tab()
         self.initialize_majors_tab()
-        self.root.mainloop()
+        self.handbook_window.mainloop()
 
     def initialize_majors_tab(self):
         top_frame = tk.Frame(self.majors_frame)
@@ -61,7 +64,7 @@ class Major_edit_window:
             side="right", anchor="n")
 
         # Create a frame to hold the All Units section and the Rules Table section
-        self.root.bind("<ButtonRelease-1>", self.end_drag)
+        self.handbook_window.bind("<ButtonRelease-1>", self.end_drag)
 
         # Initialize the All Units section (Left 1/3)
         self.initialize_all_units_section()
@@ -189,7 +192,7 @@ class Major_edit_window:
         delete_tree.pack(side="right", fill="x")
 
         rule_frame.pack(fill="x", padx=10, pady=5)
-        self.root.update_idletasks()
+        self.handbook_window.update_idletasks()
 
         x, y, width, height = rule_frame.winfo_x(), rule_frame.winfo_y(), rule_frame.winfo_width(), rule_frame.winfo_height()
         self.tables.append((rule_id, x, y, width, height))
@@ -239,8 +242,8 @@ class Major_edit_window:
         self.major_menu.pack()  # Show the major dropdown
 
     def show_add_major_dialog(self):
-        dialog = tk.Toplevel(self.root)
-        dialog.transient(self.root)
+        dialog = tk.Toplevel(self.handbook_window)
+        dialog.transient(self.handbook_window)
         dialog.grab_set()
 
         tk.Label(dialog, text="Major Name:").grid(row=0, column=0)
@@ -351,8 +354,8 @@ class Major_edit_window:
         self.refresh_rules_section()
         
     def show_add_unit_dialog(self):
-        dialog = tk.Toplevel(self.root)
-        dialog.transient(self.root)
+        dialog = tk.Toplevel(self.handbook_window)
+        dialog.transient(self.handbook_window)
         dialog.grab_set()
 
         tk.Label(dialog, text="Unit Name:").grid(
@@ -375,4 +378,4 @@ class Major_edit_window:
 
         tk.Button(dialog, text="OK", command=add_unit).grid(
             row=2, columnspan=2, padx=10, pady=10)
-        self.root.wait_window(dialog)
+        self.handbook_window.wait_window(dialog)
