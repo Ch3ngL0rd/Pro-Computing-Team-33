@@ -245,8 +245,7 @@ class Major_edit_window:
         # Update the Major dropdown based on the selected year
         # Fetch majors for the selected year from the database
         self.major_var.set("Select Major")
-        majors_for_year = self.handbook_db.fetch_majors_for_year(
-            self.cursor, selected_year)
+        majors_for_year = self.handbook_db.fetch_majors_for_year(selected_year)
 
         # Clear the current options in the major dropdown
         self.major_menu_dup["menu"].delete(0, "end")
@@ -273,7 +272,7 @@ class Major_edit_window:
         # Adding the heading above dropdowns
         tk.Label(dialog, text="Create Based on an Existing Major").grid(row=2, column=0, columnspan=2)
 
-        year_options = self.handbook_db.fetch_years(self.cursor)
+        year_options = self.handbook_db.fetch_years()
 
         # Create and place the Year dropdown
         self.year_var_dup = tk.StringVar()
@@ -297,11 +296,11 @@ class Major_edit_window:
             print(self.year_var_dup.get())
             if self.major_var_dup.get() == "Select Major" or self.year_var_dup.get() == "Select Year":
                 # Add code here to insert the new major into the database
-                self.handbook_db.create_major(self.cursor, major_name, year)
+                self.handbook_db.create_major(major_name, year)
             else:
                 print("HIHI")
-                self.handbook_db.duplicate_major(self.cursor, self.major_var_dup.get(), int(self.year_var_dup.get()), major_name, int(year))
-                print(self.handbook_db.fetch_major_rules_verbose(self.cursor, major_name, int(year)))
+                self.handbook_db.duplicate_major(self.major_var_dup.get(), int(self.year_var_dup.get()), major_name, int(year))
+                print(self.handbook_db.fetch_major_rules_verbose(major_name, int(year)))
             
             dialog.destroy()
 

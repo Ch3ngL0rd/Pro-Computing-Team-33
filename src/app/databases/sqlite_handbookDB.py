@@ -62,23 +62,24 @@ class Sqlite_handbookDB():
         ''')
 
     def duplicate_major(self, src_major, src_yr, nw_major, nw_yr):
-        cursor = self.conn.cursor()
-        self.create_major(cursor, nw_major, nw_yr)
-        nw_major_id = cursor.lastrowid
+        cursor_major = self.create_major(nw_major, nw_yr)
+        nw_major_id = cursor_major.lastrowid
+        cursor_major.close()
         
         #Get a list of all rules for the current major
-        rules_to_create = self.fetch_major_rules(cursor, src_major, src_yr)
+        rules_to_create = self.fetch_major_rules(src_major, src_yr)
         
         #Iterate through every rule that needs to be created
         for rule in rules_to_create:
-            self.create_rule(cursor, rule[1])
-            new_rule_id = cursor.lastrowid
-            self.link_major_rule(cursor,nw_major_id,new_rule_id)
+            cursor_rule = self.create_rule(rule[1])
+            new_rule_id = cursor_rule.lastrowid
+            cursor_rule.close()
+            self.link_major_rule(nw_major_id,new_rule_id)
             
             #Get all units to link
-            units_to_link = self.fetch_unit_rules(cursor, rule[0])
+            units_to_link = self.fetch_unit_rules(rule[0])
             for unit in units_to_link:
-                self.link_unit_rule(cursor, unit, new_rule_id)
+                self.link_unit_rule(unit, new_rule_id)
 
 
     def select_all_rules(self, major, yr):
@@ -155,6 +156,8 @@ class Sqlite_handbookDB():
         cursor = self.conn.cursor()
 
         cursor.execute("INSERT INTO Rules(value) VALUES(?)", (rule_value,))
+
+        return cursor
     
 
     def link_unit_rule(self, unit_code, rule_id):
@@ -167,6 +170,8 @@ class Sqlite_handbookDB():
         cursor = self.conn.cursor()
 
         cursor.execute("INSERT INTO Major(name, year) VALUES(?,?)", (major_name, major_year))
+
+        return cursor
     
 
     def link_major_rule(self, major_id, rule_id):
