@@ -61,6 +61,25 @@ class Sqlite_handbookDB():
         );
         ''')
 
+    def duplicate_major(self, src_major, src_yr, nw_major, nw_yr):
+        cursor = self.conn.cursor()
+        self.create_major(cursor, nw_major, nw_yr)
+        nw_major_id = cursor.lastrowid
+        
+        #Get a list of all rules for the current major
+        rules_to_create = self.fetch_major_rules(cursor, src_major, src_yr)
+        
+        #Iterate through every rule that needs to be created
+        for rule in rules_to_create:
+            self.create_rule(cursor, rule[1])
+            new_rule_id = cursor.lastrowid
+            self.link_major_rule(cursor,nw_major_id,new_rule_id)
+            
+            #Get all units to link
+            units_to_link = self.fetch_unit_rules(cursor, rule[0])
+            for unit in units_to_link:
+                self.link_unit_rule(cursor, unit, new_rule_id)
+
 
     def select_all_rules(self, major, yr):
         #Gets cursor for conn
@@ -369,3 +388,4 @@ class Sqlite_handbookDB():
         self.link_unit_rule('GENG5514', 1)
         self.link_unit_rule('MECH4428', 1)
         self.link_unit_rule('MECH5504', 1)
+        self.create_major('Math', 2023)

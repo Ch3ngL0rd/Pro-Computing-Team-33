@@ -240,6 +240,21 @@ class Major_edit_window:
                 label=major, command=tk._setit(self.major_var, major))
 
         self.major_menu.pack()  # Show the major dropdown
+        
+    def update_major_dropdown_dup(self, selected_year):
+        # Update the Major dropdown based on the selected year
+        # Fetch majors for the selected year from the database
+        self.major_var.set("Select Major")
+        majors_for_year = self.handbook_db.fetch_majors_for_year(
+            self.cursor, selected_year)
+
+        # Clear the current options in the major dropdown
+        self.major_menu_dup["menu"].delete(0, "end")
+
+        # Populate the major dropdown with new options
+        for major in majors_for_year:
+            self.major_menu_dup["menu"].add_command(
+                label=major, command=tk._setit(self.major_var_dup, major))
 
     def show_add_major_dialog(self):
         dialog = tk.Toplevel(self.handbook_window)
@@ -248,22 +263,50 @@ class Major_edit_window:
 
         tk.Label(dialog, text="Major Name:").grid(row=0, column=0)
         tk.Label(dialog, text="Year:").grid(row=1, column=0)
-
+        
         major_name_entry = tk.Entry(dialog)
         year_entry = tk.Entry(dialog)
 
         major_name_entry.grid(row=0, column=1)
         year_entry.grid(row=1, column=1)
 
+        # Adding the heading above dropdowns
+        tk.Label(dialog, text="Create Based on an Existing Major").grid(row=2, column=0, columnspan=2)
+
+        year_options = self.handbook_db.fetch_years(self.cursor)
+
+        # Create and place the Year dropdown
+        self.year_var_dup = tk.StringVar()
+        self.year_var_dup.set("Select Year")
+        self.year_menu_dup = tk.OptionMenu(
+            dialog, self.year_var_dup, *year_options, command=self.update_major_dropdown_dup)
+        self.year_menu_dup.grid(row=3, column=0, columnspan=2)
+
+    
+
+        # Create and place the Major dropdown (initially empty)
+        self.major_var_dup = tk.StringVar()
+        self.major_var_dup.set("Select Major")
+        self.major_menu_dup = tk.OptionMenu(dialog, self.major_var_dup, "")
+
+        self.major_menu_dup.grid(row=4, column=0, columnspan=2)
         def add_major():
             major_name = major_name_entry.get()
             year = year_entry.get()
-            # Add code here to insert the new major into the database
-            self.handbook_db.create_major(major_name, year)
+            print(self.major_var_dup.get())
+            print(self.year_var_dup.get())
+            if self.major_var_dup.get() == "Select Major" or self.year_var_dup.get() == "Select Year":
+                # Add code here to insert the new major into the database
+                self.handbook_db.create_major(self.cursor, major_name, year)
+            else:
+                print("HIHI")
+                self.handbook_db.duplicate_major(self.cursor, self.major_var_dup.get(), int(self.year_var_dup.get()), major_name, int(year))
+                print(self.handbook_db.fetch_major_rules_verbose(self.cursor, major_name, int(year)))
+            
             dialog.destroy()
 
         tk.Button(dialog, text="OK", command=add_major).grid(
-            row=2, columnspan=2)
+            row=5, columnspan=2)
 
     # Units Functionality
     
