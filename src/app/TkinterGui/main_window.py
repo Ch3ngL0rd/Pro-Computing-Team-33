@@ -4,11 +4,14 @@ from tkinter import filedialog
 import os
 
 from app.TkinterGui.output_window import Output_window
+from app.TkinterGui.major_edit_window import Major_edit_window
 
 
 class Main_window():
-    def __init__(self, marks_processor) -> None:
+    def __init__(self, marks_processor, handbook_db) -> None:
+        self.root = tk.Tk()
         self.marks_processor = marks_processor
+        self.handbook_db = handbook_db
 
         # set default path to home
         # if output path is set first - keep the same
@@ -20,10 +23,9 @@ class Main_window():
 
 
     def draw_window(self):
-        root = tk.Tk()
-        root.geometry("1000x400")
-        root.title("BE(Hons) - Marks Processor")
-        window_frame = tk.Frame(root)
+        self.root.geometry("1000x400")
+        self.root.title("BE(Hons) - Marks Processor")
+        window_frame = tk.Frame(self.root)
         window_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
 
 
@@ -32,10 +34,11 @@ class Main_window():
         menu_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
         menu_frame_button_options = {"pady":5, "padx":5,}
 
-        settings_button = tk.Button(menu_frame, text="Settings", command=root.quit)
+        settings_button = tk.Button(menu_frame, text="Settings", command=self.root.quit)
         settings_button.grid(row=0, column=0, sticky='w', **menu_frame_button_options)
 
-        modify_handbook_button = tk.Button(menu_frame, text="Modify Handbook", command=root.quit)
+        modify_handbook_button = tk.Button(menu_frame, text="Modify Handbook",
+                                           command=self.open_major_edit_window)
         modify_handbook_button.grid(row=0, column=1, sticky='w', **menu_frame_button_options)
 
 
@@ -77,14 +80,14 @@ class Main_window():
         process_file_label.grid(row=2, column=1, **file_select_label_options)
 
         # Configure row and column weights to make frames expand
-        root.grid_rowconfigure(0, weight=1)
-        root.grid_columnconfigure(0, weight=1)
+        self.root.grid_rowconfigure(0, weight=1)
+        self.root.grid_columnconfigure(0, weight=1)
         window_frame.grid_rowconfigure(1, weight=1)
         window_frame.grid_columnconfigure(0, weight=1)
         menu_frame.grid_rowconfigure(1, weight=1)
         menu_frame.grid_columnconfigure(1, weight=1)
 
-        root.mainloop()
+        self.root.mainloop()
 
     
     def are_files_selected(self):
@@ -139,10 +142,10 @@ class Main_window():
 
     def process_file(self, label):
         try:
-            self.marks_processor.process_file(self.input_filepath, self.output_filepath)
+            output_df = self.marks_processor.process_file(self.input_filepath, self.output_filepath)
             label.config(text=f"Success!")
 
-            output_window = Output_window()
+            output_window = Output_window(output_df)
             output_window.draw_window()
 
         except IsADirectoryError:
@@ -154,4 +157,12 @@ class Main_window():
                 label.config(text=f"File not selected")
             else:
                 label.config(text=f"Something went wrong :(")
+
+    
+    def open_major_edit_window(self):
+        try:
+            major_edit_window = Major_edit_window(handbook_db=self.handbook_db, root=self.root)
+            major_edit_window.initialize_UI()
+        except Exception as e:
+            print(e)
 

@@ -104,3 +104,5 @@ class Marks_processor():
 
         # Save the processed data to an output Excel file (optional)
         merged_data_adjusted.to_excel(output_filepath, index=False)
+
+        return merged_data_adjusted

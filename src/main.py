@@ -9,7 +9,7 @@ def main():
 
     marks_processor = Marks_processor(handbookDB=handbook_db)
 
-    main_window = Main_window(marks_processor=marks_processor)
+    main_window = Main_window(marks_processor=marks_processor, handbook_db=handbook_db)
     main_window.draw_window()
 
 
