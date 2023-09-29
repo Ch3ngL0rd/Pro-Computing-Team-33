@@ -112,6 +112,10 @@ class Application:
             if search_term in unit_name.lower():
                 self.all_units_tree.insert(
                     "", "end", values=(unit_name, credit_points))
+                
+    def refresh_major_units(self):
+        self.all_units_tree.delete(*self.all_units_tree.get_children())
+        self.populate_all_units()
 
     def initialize_rules_section(self):
         # Create a canvas and a vertical scrollbar and link them
@@ -319,6 +323,8 @@ class Application:
             print(f"Deleting {unit_name}")
             handbook.delete_unit(self.cursor, unit_name)
             self.refresh_unit_section()
+            self.refresh_major_units()
+            self.refresh_rules_section()
         
         def on_delete_tree_select(event):
             item = self.unit_delete_tree.selection()[0]
@@ -418,6 +424,7 @@ class Application:
             credit_points = credit_points_entry.get()
             self.tree.insert("", "end", values=(unit_name, credit_points))
             handbook.create_unit(self.cursor, unit_name, credit_points)
+            self.refresh_major_units()
             dialog.destroy()
 
         tk.Button(dialog, text="OK", command=add_unit).grid(
