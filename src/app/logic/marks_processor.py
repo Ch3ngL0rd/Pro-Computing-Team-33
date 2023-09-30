@@ -78,7 +78,7 @@ class Marks_processor():
         comments = {}
         student_eligable = {}
         # For each person id x major, get all the major_id for all years
-        for index, row in eligability_data.iteritems():
+        for index, row in eligability_data.items():
             eligable = False
             # turns their unit_codes into a set
             unit_codes = set([unit[0] for unit in row])
