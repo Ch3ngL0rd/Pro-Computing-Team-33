@@ -196,7 +196,9 @@ class Sqlite_handbookDB():
         cursor.execute("DELETE FROM MajorRules where major_id = ? AND rule_id = ?", (major_id, rule_id))
 
 
-    def delete_unit(cursor, unit_code):
+    def delete_unit(self, unit_code):
+        cursor = self.conn.cursor()
+
         cursor.execute("DELETE FROM units where unit_code=?", (unit_code,))
 
 
