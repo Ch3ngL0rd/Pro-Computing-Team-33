@@ -60,22 +60,36 @@ class Marks_processor():
         input_data['Adjusted_Mark'] = input_data.apply(self.adjust_mark, axis=1)
         input_data['Relevant_Credit_Points'] = input_data.apply(self.choose_credit_points, axis=1)
 
+        # Calculate Eligability before WAM
+        # 1. Get all students by unique Person_ID and their year + major
+
         # Filter out rows with missing or None values and for Level 3/4/5 units
         relevant_data_adjusted = input_data.dropna(subset=['Adjusted_Mark', 'Relevant_Credit_Points'])
         relevant_units_adjusted = relevant_data_adjusted[relevant_data_adjusted['Unit_Code'].str[4].isin(['3', '4', '5'])]
+
+        # Get the major - make sure that the unitcode is in the major
+        # Filter out units that are not in the major
+        relevant_units_adjusted = relevant_units_adjusted[relevant_units_adjusted.apply(lambda x: self.handbookDB.unit_in_major(x['Unit_Code'], x['Major_Deg']), axis=1)]
 
         # Calculate the EH-WAM
         eh_wam_values_adjusted = relevant_units_adjusted.groupby('Person_ID').apply(
             lambda x: (x['Adjusted_Mark'] * x['Relevant_Credit_Points']).sum() / x['Relevant_Credit_Points'].sum()
         )
+
+        # TESTING
+        # For 23001000, print the calculation of the EH-WAM with each row
+        user = relevant_units_adjusted[relevant_units_adjusted['Person_ID'] == 23001000]
+        user['Mark x Credit Points'] = user['Adjusted_Mark'] * user['Relevant_Credit_Points']
+        # prints each row with the calculation
+        for index, row in user.iterrows():
+            print(f'{row["Unit_Code"]} - {row["Mark x Credit Points"]} / {row["Relevant_Credit_Points"]}')
+
         eh_wam_adjusted = pd.DataFrame(eh_wam_values_adjusted, columns=['EH-WAM']).reset_index()
         eh_wam_adjusted['EH-WAM'] = eh_wam_adjusted['EH-WAM'].round(3)
 
         # Determine GENG4412 completion and mark for each student
         geng4412_data = input_data[input_data['Unit_Code'] == 'GENG4412'][['Person_ID', 'Mark']]
         merged_data_adjusted = pd.merge(eh_wam_adjusted, geng4412_data, on='Person_ID', how='left')
-
-        print(merged_data_adjusted)
 
         # 1. Take the Surname, Given Names, Course_Code, Course_Title, Major_Deg from the lowest row number for each Person_ID
         # Join on Person_ID
@@ -106,3 +120,27 @@ class Marks_processor():
         merged_data_adjusted.to_excel(output_filepath, index=False)
 
         return merged_data_adjusted
+    
+    # Need to implement handbook db into wam calculations
+    # Eligability checks and process into comments
+    '''
+    We want
+    Eligability checks:
+    - For each rule, check that the student has enough credit points to satisfy the rule
+
+    We need:
+    1. way to get unit rules from a major using the handbook db
+    2. way to get a students units from the input data
+    
+    only level 3,4,5 units in their major
+    other units are ignored - different levels and broadening units
+    SUM[unit mark x credit points] / sum(credit points) = eh-wam
+    additional requirements - geng >= 80, geng >= 70, must have geng
+    all attempts are included - except UP/UF ignored
+
+    1. Time
+    2. Majors
+
+    # Get every unique person id x major
+    # For each person id x major, get all the units they have done
+    '''
