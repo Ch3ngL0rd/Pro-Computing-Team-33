@@ -153,7 +153,8 @@ class Sqlite_handbookDB():
         if len(results) > 0:
             # If they have different credit points, print a warning in red
             if results[0][1] != credit_pts:
-                print(f"\033[91mWarning: Unit {unit_code} already exists in the database with different credit points\033[0m")
+                print(
+                    f"\033[91mWarning: Unit {unit_code} already exists in the database with different credit points\033[0m")
 
             print(f"Unit {unit_code} already exists in the database")
             return
@@ -263,6 +264,35 @@ class Sqlite_handbookDB():
         results = [row for row in rows]
         return results
 
+    def fetch_major_rules_verbose_by_id(self, major_id):
+        cursor = self.conn.cursor()
+        """ Fetches the rules for a major using its ID, including the unit codes for each rule and credit points for each unit"""
+        cursor.execute("""
+            SELECT r.*, GROUP_CONCAT(u.UNIT_CODE), GROUP_CONCAT(u.CREDIT_PTS)
+            FROM Rules r
+            INNER JOIN MajorRules rm ON r.rule_id = rm.rule_id
+            INNER JOIN RuleUnits ur ON r.rule_id = ur.rule_id
+            INNER JOIN Units u ON ur.unit_code = u.unit_code
+            INNER JOIN Major m ON rm.major_id = m.major_ID
+            WHERE m.major_id = ?
+            GROUP BY r.rule_id
+            """, (major_id,))
+        rows = cursor.fetchall()
+        results = []
+        for row in rows:
+            rule_id = row[0]
+            credit_points = row[1]
+            unit_names = row[2].split(',')
+            unit_credits = list(map(int, row[3].split(',')))
+
+            # Zip unit_names and unit_credits into a list of tuples
+            unit_list = list(zip(unit_names, unit_credits))
+
+            # Create the final dictionary for each rule
+            results.append((rule_id, credit_points, unit_list))
+
+        return results
+
     def delete_rule(self, rule_id):
         cursor = self.conn.cursor()
 
@@ -286,7 +316,7 @@ class Sqlite_handbookDB():
 
     def fetch_major_rules_verbose(self, major, year):
         cursor = self.conn.cursor()
-        """ Fetches the rules for a major in a given year, including the unit codes for each rule and credit points for each unit"""
+        """Fetches the rules for a major in a given year, including the unit codes for each rule and credit points for each unit"""
         cursor.execute("""
             SELECT r.*, GROUP_CONCAT(u.UNIT_CODE), GROUP_CONCAT(u.CREDIT_PTS)
             FROM Rules r
@@ -378,9 +408,23 @@ class Sqlite_handbookDB():
         for rule in rules:
             self.link_major_rule(major_id, rule)
 
+    # Given a major name, returns all the major ids
+    def get_major_ids(self, major):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT major_id from Major where name = ?", (major,))
+
+        rows = cursor.fetchall()
+        results = [row[0] for row in rows]
+        return results
+
     def populate_sampleDB(self):
 
         # Insert Sample Data
+
+        # Engineering Majors
+        # self.create_major('Biomedical Engineering', 2023)
+        # self.create_major('Electrical and Electronic Engineering', 2023)
+        # self.create_major('Environmental Engineering', 2023)
 
         # Chemical Engineering
         self.create_unit('CHEM1001', 6)
@@ -435,7 +479,6 @@ class Sqlite_handbookDB():
         self.create_unit('GENG5504', 6)
         self.create_unit('GENG5506', 6)
 
-
         # Mechanical Engineering Units
         self.create_unit('ENSC1004', 6)
         self.create_unit('GENG1000', 0)
@@ -477,43 +520,236 @@ class Sqlite_handbookDB():
         self.create_unit('MECH4428', 6)
         self.create_unit('MECH5504', 6)
 
+        # Civil Engineering Units
+        self.create_unit('GENG1000', 0)
+        self.create_unit('GENG1010', 6)
+        self.create_unit('GENG1014', 6)
+        self.create_unit('MATH1011', 6)
+        self.create_unit('MATH1012', 6)
+        self.create_unit('PHYS1001', 6)
 
-        #Engineering Majors
-        self.create_major('Automation and Robotics Engineering', 2023)
-        self.create_major('Biomedical Engineering', 2023)
-        self.create_major('Chemical Engineering', 2023)
-        self.create_major('Civil Engineering', 2023)
-        self.create_major('Electrical and Electronic Engineering', 2023)
-        self.create_major('Environmental Engineering', 2023)
-        self.create_major('Mechanical Engineering', 2023)
-        self.create_major('Mining Engineering', 2023)
-        self.create_major('Software Engineering', 2023)
+        self.create_unit('CITS2401', 6)
+        self.create_unit('CIVL2008', 6)
+        self.create_unit('CIVL2551', 6)
+        self.create_unit('ENSC2004', 6)
+        self.create_unit('GENG2000', 0)
+        self.create_unit('GENG2004', 6)
+        self.create_unit('GENG2009', 6)
+        self.create_unit('GENG2010', 6)
+        self.create_unit('GENG2012', 6)
 
-        # Link sample data
+        self.create_unit('CIVL3401', 6)
+        self.create_unit('CIVL3402', 6)
+        self.create_unit('CIVL3403', 6)
+        self.create_unit('CIVL3404', 6)
+        self.create_unit('GENG3000', 0)
+        self.create_unit('GENG3405', 6)
+
+        self.create_unit('CIVL4430', 6)
+        self.create_unit('GENG4411', 6)
+        self.create_unit('GENG4412', 6)
+        self.create_unit('GENG5010', 0)
+        self.create_unit('GENG5505', 6)
+        self.create_unit('GENG5507', 6)
+
+        self.create_unit('CIVL5550', 6)
+        self.create_unit('CIVL5552', 6)
+
+        self.create_unit('CIVL5501', 6)
+        self.create_unit('CIVL5503', 6)
+        self.create_unit('CIVL5504', 6)
+        self.create_unit('CIVL5505', 6)
+        self.create_unit('ENVE3402', 6)
+        self.create_unit('GENG5501', 6)
+        self.create_unit('GENG5502', 6)
+        self.create_unit('GENG5514', 6)
+
+        # Mining Engineering Units
+        # Level 1 Units
+        self.create_unit('CHEM1001', 6)
+        self.create_unit('EART1104', 6)
+        self.create_unit('GENG1000', 0)
+        self.create_unit('GENG1010', 6)
+        self.create_unit('GENG1014', 6)
+        self.create_unit('MATH1011', 6)
+        self.create_unit('MATH1012', 6)
+        self.create_unit('PHYS1001', 6)
+
+        # Level 2 Units
+        self.create_unit('CITS2401', 6)
+        self.create_unit('ENSC2003', 6)
+        self.create_unit('ENSC2004', 6)
+        self.create_unit('GENG2000', 0)
+        self.create_unit('GENG2004', 6)
+        self.create_unit('GENG2009', 6)
+        self.create_unit('GENG2010', 6)
+        self.create_unit('MINE2001', 6)
+
+        # Level 3 Units
+        self.create_unit('GENG3000', 0)
+        self.create_unit('MINE3401', 6)
+        self.create_unit('MINE3404', 6)
+        self.create_unit('MINE3405', 6)
+        self.create_unit('MINE3406', 6)
+        self.create_unit('MINE3503', 6)
+
+        # Level 4 Units
+        self.create_unit('GENG4403', 6)
+        self.create_unit('GENG4411', 6)
+        self.create_unit('GENG4412', 6)
+        self.create_unit('GENG5010', 0)
+        self.create_unit('GENG5505', 6)
+        self.create_unit('GENG5507', 6)
+        self.create_unit('MINE4001', 6)
+        self.create_unit('MINE4502', 6)
+        self.create_unit('MINE5501', 6)
+        self.create_unit('MINE5551', 6)
+
+        # Software Engineering Units
+        # Level 1 Units
+        self.create_unit('CITS1003', 6)
+        self.create_unit('CITS1401', 6)
+        self.create_unit('CITS1402', 6)
+        self.create_unit('ELEC1303', 6)
+        self.create_unit('GENG1000', 0)
+        self.create_unit('GENG1010', 6)
+        self.create_unit('MATH1011', 6)
+        self.create_unit('MATH1012', 6)
+        self.create_unit('PHYS1001', 6)
+
+        # Level 2 Units
+        self.create_unit('CITS2002', 6)
+        self.create_unit('CITS2005', 6)
+        self.create_unit('CITS2200', 6)
+        self.create_unit('CITS2211', 6)
+        self.create_unit('GENG2000', 0)
+        self.create_unit('STAT2063', 6)
+
+        # Level 3 Units
+        self.create_unit('CITS3002', 6)
+        self.create_unit('CITS3005', 6)
+        self.create_unit('CITS3007', 6)
+        self.create_unit('CITS3200', 6)
+        self.create_unit('CITS3301', 6)
+        self.create_unit('CITS3403', 6)
+        self.create_unit('ELEC3020', 6)
+        self.create_unit('GENG3000', 0)
+
+        # Level 4 Units
+        self.create_unit('CITS4419', 6)
+        self.create_unit('CITS5501', 6)
+        self.create_unit('CITS5503', 6)
+        self.create_unit('CITS5507', 6)
+        self.create_unit('GENG4411', 6)
+        self.create_unit('GENG4412', 6)
+        self.create_unit('GENG5010', 0)
+        self.create_unit('GENG5505', 6)
+        self.create_unit('GENG5507', 6)
+
+        # Automation and Robotics Engineering Units
+        # Level 1 Units
+        self.create_unit('CITS1401', 6)
+        self.create_unit('ELEC1303', 6)
+        self.create_unit('ENSC1004', 6)
+        self.create_unit('GENG1000', 0)
+        self.create_unit('GENG1010', 6)
+        self.create_unit('MATH1011', 6)
+        self.create_unit('MATH1012', 6)
+
+        # Level 2 Units
+        self.create_unit('CITS2002', 6)
+        self.create_unit('CITS2200', 6)
+        self.create_unit('ELEC2311', 6)
+        self.create_unit('ENSC2003', 6)
+        self.create_unit('ENSC2004', 6)
+        self.create_unit('GENG2000', 0)
+        self.create_unit('GENG2004', 6)
+        self.create_unit('MECH2004', 6)
+
+        # Level 3 Units
+        self.create_unit('AUTO3002', 6)
+        self.create_unit('CITS3001', 6)
+        self.create_unit('ELEC3016', 6)
+        self.create_unit('ELEC3020', 6)
+        self.create_unit('GENG3000', 0)
+        self.create_unit('GENG3402', 6)
+        self.create_unit('MECH3001', 6)
+        self.create_unit('MECH3424', 6)
+
+        # Level 4 Units
+        self.create_unit('AUTO4507', 6)
+        self.create_unit('AUTO4508', 6)
+        self.create_unit('CITS4402', 6)
+        self.create_unit('ELEC5506', 6)
+        self.create_unit('GENG4411', 6)
+        self.create_unit('GENG4412', 6)
+        self.create_unit('GENG5010', 0)
+        self.create_unit('GENG5505', 6)
+        self.create_unit('GENG5507', 6)
+
+        # Automation and Robotics Engineering 2023
+        self.create_major_with_rules('Automation and Robotics Engineering', 2023,
+                                     [
+                                         self.create_rule_with_units(
+                                             ['CITS1401', 'ELEC1303', 'ENSC1004', 'GENG1000', 'GENG1010', 'MATH1011', 'MATH1012'], 36),
+                                         self.create_rule_with_units(
+                                             ['CITS2002', 'CITS2200', 'ELEC2311', 'ENSC2003', 'ENSC2004', 'GENG2000', 'GENG2004', 'MECH2004'], 42),
+                                         self.create_rule_with_units(
+                                             ['AUTO3002', 'CITS3001', 'ELEC3016', 'ELEC3020', 'GENG3000', 'GENG3402', 'MECH3001', 'MECH3424'], 42),
+                                         self.create_rule_with_units(
+                                             ['AUTO4507', 'AUTO4508', 'CITS4402', 'ELEC5506', 'GENG4411', 'GENG4412', 'GENG5010', 'GENG5505', 'GENG5507'], 48)
+                                     ])
 
         # Mechanical Engineering 2023
         self.create_major_with_rules('Mechanical Engineering', 2023,
-                                     [   
-                                        #level 1 and 2 rules for eligibility check
+                                     [
+                                         # level 1 and 2 rules for eligibility check
                                          self.create_rule_with_units(
-                                            ['ENSC1004', 'GENG1000', 'GENG1010', 'GENG1101', 'MATH1011', 'MATH1012', 'PHYS1001'], 36),
-                                        self.create_rule_with_units(
-                                            ['CITS2401', 'ENSC2003', 'ENSC2004', 'GENG2000', 'GENG2003', 'GENG2004', 'MECH2002', 'MECH2004'], 42),
-                                        #level 3 and above rules
-                                        self.create_rule_with_units(
-                                            ['GENG3000', 'GENG3402', 'GENG3405', 'MATH3023', 'MECH3001', 'MECH3002', 'MECH3024', 'MECH3424'], 42),
-                                        self.create_rule_with_units(
-                                            ['GENG5010', 'GENG5507', 'MECH4426', 'MECH4429', 'MECH4502', 'MECH5551'], 30),
+                                             ['ENSC1004', 'GENG1000', 'GENG1010', 'GENG1101', 'MATH1011', 'MATH1012', 'PHYS1001'], 36),
+                                         self.create_rule_with_units(
+                                             ['CITS2401', 'ENSC2003', 'ENSC2004', 'GENG2000', 'GENG2003', 'GENG2004', 'MECH2002', 'MECH2004'], 42),
+                                         # level 3 and above rules
+                                         self.create_rule_with_units(
+                                             ['GENG3000', 'GENG3402', 'GENG3405', 'MATH3023', 'MECH3001', 'MECH3002', 'MECH3024', 'MECH3424'], 42),
+                                         self.create_rule_with_units(
+                                             ['GENG5010', 'GENG5507', 'MECH4426', 'MECH4429', 'MECH4502', 'MECH5551'], 30),
 
-                                        self.create_rule_with_units(
-                                            ['GENG4411', 'GENG4412', 'MECH5552'], 6),
-                                        self.create_rule_with_units(
-                                            ['CHPR3405', 'GENG5504', 'GENG5505', 'GENG5514', 'MECH442', 'MEC5504'], 6),
-                                        self.create_rule_with_units(
-                                            ['GENG4411', 'GENG4412', 'MECH5552', 'CHPR3405', 'GENG5504', 'GENG5505', 'GENG5514', 'MECH442', 'MEC5504'], 18)
+                                         self.create_rule_with_units(
+                                             ['GENG4411', 'GENG4412', 'MECH5552'], 6),
+                                         self.create_rule_with_units(
+                                             ['CHPR3405', 'GENG5504', 'GENG5505', 'GENG5514', 'MECH442', 'MEC5504'], 6),
+                                         self.create_rule_with_units(
+                                             ['GENG4411', 'GENG4412', 'MECH5552', 'CHPR3405', 'GENG5504', 'GENG5505', 'GENG5514', 'MECH442', 'MEC5504'], 18)
 
                                      ])
 
+        self.create_major_with_rules('Software Engineering', 2023,
+                                     [
+                                         self.create_rule_with_units(
+                                             ['CITS1003', 'CITS1401', 'CITS1402', 'ELEC1303', 'GENG1000', 'GENG1010', 'MATH1011', 'MATH1012', 'PHYS1001'], 48),
+                                         self.create_rule_with_units(
+                                             ['CITS2002', 'CITS2005', 'CITS2200', 'CITS2211', 'GENG2000', 'STAT2063'], 30),
+                                         self.create_rule_with_units(
+                                             ['CITS3002', 'CITS3005', 'CITS3007', 'CITS3200', 'CITS3301', 'CITS3403', 'ELEC3020', 'GENG3000'], 42),
+                                         self.create_rule_with_units(
+                                             ['CITS4419', 'CITS5501', 'CITS5503', 'CITS5507', 'GENG4411', 'GENG4412', 'GENG5010', 'GENG5505', 'GENG5507'], 48)
+                                     ])
+
+        self.create_major_with_rules('Mining Engineering', 2023,
+                                     [
+                                         # Level 1 Units
+                                         self.create_rule_with_units(
+                                             ['CHEM1001', 'EART1104', 'GENG1000', 'GENG1010', 'GENG1014', 'MATH1011', 'MATH1012', 'PHYS1001'], 42),
+                                         # Level 2 Units
+                                         self.create_rule_with_units(
+                                             ['CITS2401', 'ENSC2003', 'ENSC2004', 'GENG2000', 'GENG2004', 'GENG2009', 'GENG2010', 'MINE2001'], 42),
+                                         # Level 3 Units
+                                         self.create_rule_with_units(
+                                             ['GENG3000', 'MINE3401', 'MINE3404', 'MINE3405', 'MINE3406', 'MINE3503'], 30),
+                                         # Level 4 Units
+                                         self.create_rule_with_units(
+                                             ['GENG4403', 'GENG4411', 'GENG4412', 'GENG5010', 'GENG5505', 'GENG5507', 'MINE4001', 'MINE4502', 'MINE5501', 'MINE5551'], 54)
+                                     ])
 
         # Chemical Engineering 2023
         # 48 points Rule
@@ -522,7 +758,7 @@ class Sqlite_handbookDB():
                                          self.create_rule_with_units(['CHEM1001', 'CHEM1002', 'CHPR1005', 'ENSC1004',
                                                                       'GENG1000', 'GENG1010', 'MATH1011', 'MATH1012', 'PHYS1001'], 48),
 
-        
+
 
                                          # Take 30 points Rule
                                          self.create_rule_with_units(
@@ -532,7 +768,7 @@ class Sqlite_handbookDB():
                                          self.create_rule_with_units(['CHPR3018', 'CHPR3019', 'CHPR3404', 'CHPR3405',
                                                                       'CHPR3406', 'CHPR3407', 'GENG3000', 'GENG3402', 'GENG5010'], 42),
 
-                                         # Level 4 Rule - 36 
+                                         # Level 4 Rule - 36
                                          self.create_rule_with_units(
                                              ['CHPR4501', 'CHPR5550', 'GENG4411', 'GENG4412', 'GENG5507'], 36),
 
@@ -543,4 +779,26 @@ class Sqlite_handbookDB():
                                          # Group B Rule
                                          self.create_rule_with_units(
                                              ['CITS4009', 'ENVE4401', 'GENG4403', 'GENG4410', 'GENG5503', 'GENG5504', 'GENG5506'], 12)
+                                     ])
+
+        # Civil Engineering 2023
+        self.create_major_with_rules('Civil Engineering', 2023,
+                                     [
+                                         # level 1 and 2 rules for eligibility check
+                                         self.create_rule_with_units(
+                                             ['GENG1000', 'GENG1010', 'GENG1014', 'MATH1011', 'MATH1012', 'PHYS1001'], 30),
+                                         self.create_rule_with_units(
+                                             ['CITS2401', 'CIVL2008', 'CIVL2551', 'ENSC2004', 'GENG2000', 'GENG2004', 'GENG2009', 'GENG2010', 'GENG2012'], 42),
+                                         # level 3 and above rules
+                                         self.create_rule_with_units(
+                                             ['CIVL3401', 'CIVL3402', 'CIVL3403', 'CIVL3404', 'GENG3000', 'GENG3405'], 30),
+                                         self.create_rule_with_units(
+                                             ['CIVL4430', 'GENG4411', 'GENG4412', 'GENG5010', 'GENG5505', 'GENG5507'], 30),
+
+                                         self.create_rule_with_units(
+                                             ['CIVL5550', 'CIVL5552'], 6),
+                                         self.create_rule_with_units(
+                                             ['CIVL5501', 'CIVL5503', 'CIVL5504', 'CIVL5505', 'ENVE3402', 'GENG5501', 'GENG5502', 'GENG5514'], 18),
+                                         self.create_rule_with_units(
+                                             ['CIVL5550', 'CIVL5552', 'CIVL5501', 'CIVL5503', 'CIVL5504', 'CIVL5505', 'ENVE3402', 'GENG5501', 'GENG5502', 'GENG5514'], 30)
                                      ])
