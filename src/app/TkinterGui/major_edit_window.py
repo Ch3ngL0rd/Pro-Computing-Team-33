@@ -24,8 +24,10 @@ class Major_edit_window:
         notebook = ttk.Notebook(self.handbook_window)
         self.units_frame = ttk.Frame(notebook)
         self.majors_frame = ttk.Frame(notebook)
+        self.rules_frame = ttk.Frame(notebook)
         notebook.add(self.units_frame, text="Units")
         notebook.add(self.majors_frame, text="Majors")
+        notebook.add(self.rules_frame, text="Rules")
         notebook.pack(expand=1, fill="both")
 
         self.initialize_units_tab()
