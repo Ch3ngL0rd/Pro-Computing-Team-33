@@ -28,19 +28,19 @@ class Sqlite_handbookDB():
         ''')
 
         cursor.execute('''
-        CREATE TABLE RuleUnits (
-            unit_code TEXT,
-            rule_id INTEGER,
-            FOREIGN KEY(unit_code) REFERENCES Units(unit_code) ON DELETE CASCADE,
-            FOREIGN KEY(rule_id) REFERENCES Rule(rule_id),
-            PRIMARY KEY(unit_code, rule_id)
+        CREATE TABLE Rules (
+            rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            value INTEGER
         );
         ''')
 
         cursor.execute('''
-        CREATE TABLE Rules (
-            rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            value INTEGER
+        CREATE TABLE RuleUnits (
+            unit_code TEXT,
+            rule_id INTEGER,
+            FOREIGN KEY(unit_code) REFERENCES Units(unit_code) ON DELETE CASCADE,
+            FOREIGN KEY(rule_id) REFERENCES Rules(rule_id),
+            PRIMARY KEY(unit_code, rule_id)
         );
         ''')
 
@@ -53,14 +53,14 @@ class Sqlite_handbookDB():
         ''')
 
         cursor.execute('''
-        CREATE TABLE MajorRules (
-            major_id INTEGER,
-            rule_id INTEGER,
-            FOREIGN KEY(major_id) REFERENCES Major(major_id),
-            FOREIGN KEY(rule_id) REFERENCES Rules(rule_id),
-            PRIMARY KEY(major_id, rule_id)
-        );
-        ''')
+            CREATE TABLE MajorRules (
+                major_id INTEGER,
+                rule_id INTEGER,
+                FOREIGN KEY(major_id) REFERENCES Major(major_id) ON DELETE CASCADE,
+                FOREIGN KEY(rule_id) REFERENCES Rules(rule_id),
+                PRIMARY KEY(major_id, rule_id)
+            );
+            ''')
 
     def duplicate_major(self, src_major, src_yr, nw_major, nw_yr):
         cursor_major = self.create_major(nw_major, nw_yr)
@@ -237,6 +237,14 @@ class Sqlite_handbookDB():
         cursor = self.conn.cursor()
 
         cursor.execute("DELETE FROM units where unit_code=?", (unit_code,))
+
+    def delete_major(self, major_id):
+        cursor = self.conn.cursor()
+        
+        cursor.execute("DELETE FROM Major WHERE major_id=?", (major_id,))
+
+        # deletes rules as well
+        cursor.execute("DELETE FROM MajorRules WHERE major_id=?", (major_id,))
 
     def fetch_all_units(self):
         cursor = self.conn.cursor()
