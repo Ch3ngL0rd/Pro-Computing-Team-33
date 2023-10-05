@@ -24,15 +24,82 @@ class Major_edit_window:
         notebook = ttk.Notebook(self.handbook_window)
         self.units_frame = ttk.Frame(notebook)
         self.majors_frame = ttk.Frame(notebook)
-        self.rules_frame = ttk.Frame(notebook)
+        self.rules_search_frame = ttk.Frame(notebook)
         notebook.add(self.units_frame, text="Units")
         notebook.add(self.majors_frame, text="Majors")
-        notebook.add(self.rules_frame, text="Rules")
+        notebook.add(self.rules_search_frame, text="Rules")
         notebook.pack(expand=1, fill="both")
 
         self.initialize_units_tab()
         self.initialize_majors_tab()
+        self.initialize_rules_tab()
         self.handbook_window.mainloop()
+
+    def initialize_rules_tab(self):
+        frame = tk.Frame(self.rules_search_frame)
+        frame.pack(side="top", fill="x", padx=5, pady=10)
+
+        # Create a new frame to hold the ID input and search button
+        input_frame = tk.Frame(frame)
+        input_frame.pack(side="left", fill="x")
+
+        # Create and place the ID input (text box) within the input_frame
+        self.rule_id_entry = tk.Entry(input_frame)
+        self.rule_id_entry.pack(side="left", padx=5)
+
+        # Create and place the search button next to the ID input
+        search_button = tk.Button(input_frame, text="Search", command=self.on_search_button_clicked)
+        search_button.pack(side="left", padx=5)
+
+        # Create a frame to hold the rule tables and put it inside the rules_search_frame
+        self.search_rule_frame = tk.Frame(self.rules_search_frame)
+        self.search_rule_frame.pack(fill="x", padx=5, pady=10)  # Pack it into the main rules tab frame
+
+    def on_search_button_clicked(self):
+        # Get the rule ID from the text box
+        rule_id = self.rule_id_entry.get()
+        
+        # Pass it to your search or refresh function (assuming it's `refresh_searched_rule`)
+        self.refresh_searched_rule(rule_id)
+
+
+    def refresh_searched_rule(self, value):
+        # Clear existing rules if any
+        for widget in self.search_rule_frame.winfo_children():
+            widget.destroy()
+        rule_id = self.rule_id_entry.get()
+        # Fetch new rules and populate
+        rules_data = self.handbook_db.fetch_rule_verbose(rule_id)
+        
+        #Fetch major details
+        major_details = self.handbook_db.fetch_rule_major(rule_id)
+        year = major_details[1]
+        major = major_details[0]
+        
+        for index, (rule_id, credit_points, units) in enumerate(rules_data):
+            self.create_search_rule_table(self.search_rule_frame, rule_id, credit_points, year, major,units, rule_id)
+
+    def create_search_rule_table(self, frame, rule_name, credit_points,yr,major,units, rule_id):
+        rule_frame = tk.Frame(frame)
+        header_frame = tk.Frame(rule_frame)
+        header_frame.pack(fill="x")
+
+        tk.Label(header_frame, text=f"{rule_name} From {major}, {yr} - Credit Points: {credit_points}", font=("Arial", 16)).pack(side="left")
+
+        # Create the main Treeview for displaying units
+        tree = ttk.Treeview(rule_frame, columns=("Unit Name", "Unit Credit Points"), show="headings")
+        tree.heading("#1", text="Unit Name")
+        tree.heading("#2", text="Unit Credit Points")
+
+        for unit in units:
+            unit_name, unit_credit_points = unit
+            tree.insert("", "end", values=(unit_name, unit_credit_points))
+
+        tree.pack(fill="both", expand=True)  # Ensure the treeview is packed and visible
+
+        rule_frame.pack(fill="x", padx=10, pady=5)
+        self.handbook_window.update_idletasks()
+
 
     def initialize_majors_tab(self):
         top_frame = tk.Frame(self.majors_frame)

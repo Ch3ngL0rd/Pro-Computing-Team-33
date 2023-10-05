@@ -295,6 +295,43 @@ class Sqlite_handbookDB():
             results.append((rule_id, credit_points, unit_list))
 
         return results
+    def fetch_rule_major(self, rule_id):
+        cursor = self.conn.cursor()
+        cursor.execute("""SELECT m.name, m.year
+                       FROM Rules r
+                       INNER JOIN MajorRules rm on r.rule_id = rm.rule_id
+                       INNER JOIN Major m on rm.major_id = m.major_ID
+                       WHERE r.rule_id = ?""", rule_id)
+        
+        rows = cursor.fetchall()
+        return (rows[0][0], rows[0][1])
+        
+    def fetch_rule_verbose(self, rule_id):
+        cursor = self.conn.cursor()
+        """ Fetches the rules for a major using its ID, including the unit codes for each rule and credit points for each unit"""
+        cursor.execute("""
+            SELECT r.*, GROUP_CONCAT(u.UNIT_CODE), GROUP_CONCAT(u.CREDIT_PTS)
+            FROM Rules r
+            INNER JOIN RuleUnits ur ON r.rule_id = ur.rule_id
+            INNER JOIN Units u ON ur.unit_code = u.unit_code
+            WHERE r.rule_id = ?
+            GROUP BY r.rule_id
+            """, (rule_id,))
+        rows = cursor.fetchall()
+        results = []
+        for row in rows:
+            rule_id = row[0]
+            credit_points = row[1]
+            unit_names = row[2].split(',')
+            unit_credits = list(map(int, row[3].split(',')))
+
+            # Zip unit_names and unit_credits into a list of tuples
+            unit_list = list(zip(unit_names, unit_credits))
+
+            # Create the final dictionary for each rule
+            results.append((rule_id, credit_points, unit_list))
+
+        return results
 
     def delete_rule(self, rule_id):
         cursor = self.conn.cursor()
