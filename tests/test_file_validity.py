@@ -15,19 +15,20 @@ class TestExcelProcessing(unittest.TestCase):
         self.marks_processor = Marks_processor()
 
     # ================================= Valid file testing =================================
+    
     def test_valid_file_xls(self):
         input_file = 'valid_file.xls'
-        
-        result = self.marks_processor.process_file(input_file)
-
+            
+        output_file = self.marks_processor.process_file(input_file)
+    
         # Check that the output file was created
         self.assertTrue(os.path.exists(output_file), "Output file should be created")
-
+    
     def test_valid_file_xlsx(self):
         input_file = 'valid_file.xlsx'
-        
-        result = self.marks_processor.process_file(input_file)
-
+            
+        output_file = self.marks_processor.process_file(input_file)
+    
         # Check that the output file was created
         self.assertTrue(os.path.exists(output_file), "Output file should be created")
 
