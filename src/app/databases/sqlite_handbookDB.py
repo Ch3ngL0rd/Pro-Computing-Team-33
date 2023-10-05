@@ -319,13 +319,13 @@ class Sqlite_handbookDB():
 
     def fetch_major_rules_verbose(self, major, year):
         cursor = self.conn.cursor()
-        """Fetches the rules for a major in a given year, including the unit codes for each rule and credit points for each unit"""
+        """Fetches the rules for a major in a given year, including the unit codes for each rule and credit points for each unit (if available)"""
         cursor.execute("""
             SELECT r.*, GROUP_CONCAT(u.UNIT_CODE), GROUP_CONCAT(u.CREDIT_PTS)
             FROM Rules r
             INNER JOIN MajorRules rm ON r.rule_id = rm.rule_id
-            INNER JOIN RuleUnits ur ON r.rule_id = ur.rule_id
-            INNER JOIN Units u ON ur.unit_code = u.unit_code
+            LEFT JOIN RuleUnits ur ON r.rule_id = ur.rule_id
+            LEFT JOIN Units u ON ur.unit_code = u.unit_code
             INNER JOIN Major m ON rm.major_id = m.major_ID
             WHERE m.name = ? AND m.year = ?
             GROUP BY r.rule_id
@@ -335,16 +335,22 @@ class Sqlite_handbookDB():
         for row in rows:
             rule_id = row[0]
             credit_points = row[1]
-            unit_names = row[2].split(',')
-            unit_credits = list(map(int, row[3].split(',')))
+            
+            # Check if the rule has associated units
+            if row[2] and row[3]:
+                unit_names = row[2].split(',')
+                unit_credits = list(map(int, row[3].split(',')))
 
-            # Zip unit_names and unit_credits into a list of tuples
-            unit_list = list(zip(unit_names, unit_credits))
+                # Zip unit_names and unit_credits into a list of tuples
+                unit_list = list(zip(unit_names, unit_credits))
+            else:
+                unit_list = []
 
             # Create the final dictionary for each rule
             results.append((rule_id, credit_points, unit_list))
 
         return results
+
 
     def get_major_id(self, major, year):
         cursor = self.conn.cursor()

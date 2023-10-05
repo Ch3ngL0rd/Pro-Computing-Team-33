@@ -62,6 +62,11 @@ class Major_edit_window:
         # Create and place the "Add Major" button
         tk.Button(top_frame, text="Add Major", command=self.show_add_major_dialog).pack(
             side="right", anchor="n")
+        
+        # Create and place the "Add Rule" button
+        tk.Button(top_frame, text="Add Rule", command=self.show_add_rule_dialog).pack(
+    side='right', anchor="n", padx=5)
+
 
         # Create a frame to hold the All Units section and the Rules Table section
         self.handbook_window.bind("<ButtonRelease-1>", self.end_drag)
@@ -79,6 +84,37 @@ class Major_edit_window:
 
         # Reinitialize the majors tab
         self.initialize_majors_tab()
+
+    def show_add_rule_dialog(self):
+        dialog = tk.Toplevel(self.handbook_window)
+        dialog.transient(self.handbook_window)
+        dialog.grab_set()
+
+        tk.Label(dialog, text="Credit Points:").grid(row=0, column=0, padx=10, pady=10)
+
+        credit_points_entry = tk.Entry(dialog)
+        credit_points_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        def add_rule():
+            try:
+                credit_points = int(credit_points_entry.get())
+            except ValueError:
+                # Handle non-integer input, you can show an error dialog or a message
+                print("Please enter a valid integer for credit points.")
+                return
+
+            # Add the rule and get its ID
+            rule_id = self.handbook_db.create_rule_and_get_id(credit_points)
+            
+            # Link the rule to the current selected major
+            major_id = self.handbook_db.get_major_id(self.major_var.get(), self.year_var.get())  # Assuming you have a method to get major_id based on major name and year
+            self.handbook_db.link_major_rule(major_id, rule_id)
+
+            
+            dialog.destroy()
+            self.refresh_rules_section()
+
+        tk.Button(dialog, text="OK", command=add_rule).grid(row=1, columnspan=2, padx=10, pady=10)
 
     def initialize_all_units_section(self):
         # Create a frame for the "All Units" section
@@ -155,6 +191,7 @@ class Major_edit_window:
             year=self.year_var.get()
         )
 
+        print(rules_data)
 
         for index, (rule_id, credit_points, units) in enumerate(rules_data):
             self.create_rule_table(self.rules_frame, index+1, credit_points, units,rule_id)
@@ -237,7 +274,7 @@ class Major_edit_window:
         print(f"Adding {unit} to {rule_id}")  # Debugging print statement
         self.handbook_db.link_unit_rule(unit[0], rule_id)
         self.refresh_rules_section()
-    def update_major_dropdown(self, selected_year):
+    def update_major_dropdown(self, selected_year): 
         # Update the Major dropdown based on the selected year
         # Fetch majors for the selected year from the database
         self.major_var.set("Select Major")
