@@ -63,6 +63,10 @@ class Major_edit_window:
         tk.Button(top_frame, text="Add Major", command=self.show_add_major_dialog).pack(
             side="right", anchor="n")
         
+        # Create and place the "Delete Major" button
+        tk.Button(top_frame, text="Delete Major", command=self.delete_major).pack(
+    side='right', anchor="n", padx=5)
+
         # Create and place the "Add Rule" button
         tk.Button(top_frame, text="Add Rule", command=self.show_add_rule_dialog).pack(
     side='right', anchor="n", padx=5)
@@ -359,7 +363,15 @@ class Major_edit_window:
             row=5, columnspan=2)
 
     # Units Functionality
-    
+    def delete_major(self):
+        selected_major = self.major_var.get()
+        if selected_major != "Select Major":
+            major_id = self.handbook_db.get_major_id(selected_major, self.year_var.get())
+            self.handbook_db.delete_major(major_id)
+            self.refresh_majors_tab()
+            self.refresh_unit_section()
+        else:
+            print("No Major selected to delete.")
 
     
     def initialize_units_tab(self):
