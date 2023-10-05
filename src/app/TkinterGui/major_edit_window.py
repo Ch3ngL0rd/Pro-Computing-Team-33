@@ -246,6 +246,9 @@ class Major_edit_window:
         # Clear the current options in the major dropdown
         self.major_menu["menu"].delete(0, "end")
 
+        # Sort alphabetically
+        majors_for_year.sort()
+
         # Populate the major dropdown with new options
         for major in majors_for_year:
             self.major_menu["menu"].add_command(
@@ -292,7 +295,6 @@ class Major_edit_window:
         self.year_menu_dup = tk.OptionMenu(
             dialog, self.year_var_dup, *year_options, command=self.update_major_dropdown_dup)
         self.year_menu_dup.grid(row=3, column=0, columnspan=2)
-
 
         # Create and place the Major dropdown (initially empty)
         self.major_var_dup = tk.StringVar()
