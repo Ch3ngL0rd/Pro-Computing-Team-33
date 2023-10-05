@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas import ExcelWriter
 
 class Marks_processor():
     def __init__(self, handbookDB) -> None:
@@ -176,8 +177,6 @@ class Marks_processor():
         # Assign Honours classification
         merged_data_adjusted['Honours Class'] = merged_data_adjusted.apply(self.assign_honours, axis=1)
 
-        # TODO: Add in honours classification
-
         # Turns Person_ID into a string
         merged_data_adjusted['Person_ID'] = merged_data_adjusted['Person_ID'].astype(str)
 
@@ -205,7 +204,13 @@ class Marks_processor():
         # Order of columns
         merged_data_adjusted = merged_data_adjusted[['Person_ID', 'Surname', 'Given Names', 'Course_Code', 'Course_Title', 'Major_Deg', 'Completed GENG4412 (Y/N)','GENG4412 Mark', 'EH-WAM',  'Honours Class', 'Missing Information (Y/N)', 'Comments (missing information)']]
         # Save the processed data to an output Excel file (optional)
-        merged_data_adjusted.to_excel(output_filepath, index=False)
+        with ExcelWriter(output_filepath, engine='openpyxl') as writer:
+            merged_data_adjusted.to_excel(writer, index=False, sheet_name='Sheet1')
+
+            # Access the workbook and worksheet to set the auto-filter
+            worksheet = writer.sheets['Sheet1']
+            worksheet.auto_filter.ref = worksheet.dimensions
+
 
         return merged_data_adjusted
     
