@@ -89,10 +89,10 @@ class Major_edit_window:
 
         # Create a Treeview to display all units
         self.all_units_tree = ttk.Treeview(all_units_frame, columns=(
-            "Unit Name", "Credit Points"), show="headings")
+            "Unit Code", "Credit Points"), show="headings")
 
 
-        self.all_units_tree.heading("#1", text="Unit Name")
+        self.all_units_tree.heading("#1", text="Unit Code")
         self.all_units_tree.heading("#2", text="Credit Points")
         self.all_units_tree.pack(fill="both", expand=True, padx=5, pady=5)
         self.all_units_tree.bind("<ButtonPress-1>", self.start_drag)
@@ -177,8 +177,8 @@ class Major_edit_window:
         tk.Button(header_frame, text="Delete Rule", command=delete_rule).pack(side="right")
 
         # Create the main Treeview for displaying units
-        tree = ttk.Treeview(rule_frame, columns=("Unit Name", "Unit Credit Points"), show="headings")
-        tree.heading("#1", text="Unit Name")
+        tree = ttk.Treeview(rule_frame, columns=("Unit Code", "Unit Credit Points"), show="headings")
+        tree.heading("#1", text="Unit Code")
         tree.heading("#2", text="Unit Credit Points")
 
         # Create the Delete Treeview for delete actions
@@ -352,8 +352,8 @@ class Major_edit_window:
 
         # Create Treeview with height set to 10 rows
         self.tree = ttk.Treeview(self.units_frame, columns=(
-            "Unit Name", "Credit Points"), show="headings", height=10)
-        self.tree.heading("#1", text="Unit Name")
+            "Unit Code", "Credit Points"), show="headings", height=10)
+        self.tree.heading("#1", text="Unit Code")
         self.tree.heading("#2", text="Credit Points")
         
         self.unit_delete_tree = ttk.Treeview(self.units_frame, columns=("Actions"), show="headings")
@@ -406,7 +406,7 @@ class Major_edit_window:
         dialog.transient(self.handbook_window)
         dialog.grab_set()
 
-        tk.Label(dialog, text="Unit Name:").grid(
+        tk.Label(dialog, text="Unit Code:").grid(
             row=0, column=0, padx=10, pady=10)
         tk.Label(dialog, text="Credit Points:").grid(
             row=1, column=0, padx=10, pady=10)
