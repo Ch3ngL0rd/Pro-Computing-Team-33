@@ -72,6 +72,14 @@ class Major_edit_window:
         # Initialize the Rules Table section (Right 2/3)
         self.initialize_rules_section()
 
+    def refresh_majors_tab(self, *args):
+        # Clear existing rules if any
+        for widget in self.majors_frame.winfo_children():
+            widget.destroy()
+
+        # Reinitialize the majors tab
+        self.initialize_majors_tab()
+
     def initialize_all_units_section(self):
         # Create a frame for the "All Units" section
         all_units_frame = tk.Frame(self.majors_frame, width=200)
@@ -285,7 +293,6 @@ class Major_edit_window:
             dialog, self.year_var_dup, *year_options, command=self.update_major_dropdown_dup)
         self.year_menu_dup.grid(row=3, column=0, columnspan=2)
 
-    
 
         # Create and place the Major dropdown (initially empty)
         self.major_var_dup = tk.StringVar()
@@ -307,6 +314,7 @@ class Major_edit_window:
                 print(self.handbook_db.fetch_major_rules_verbose(major_name, int(year)))
             
             dialog.destroy()
+            self.refresh_majors_tab()
 
         tk.Button(dialog, text="OK", command=add_major).grid(
             row=5, columnspan=2)
