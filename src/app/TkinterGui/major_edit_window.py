@@ -68,17 +68,35 @@ class Major_edit_window:
         for widget in self.search_rule_frame.winfo_children():
             widget.destroy()
         rule_id = self.rule_id_entry.get()
+        print(rule_id)
         # Fetch new rules and populate
         rules_data = self.handbook_db.fetch_rule_verbose(rule_id)
-        
+        print(rules_data)
+        if rules_data == []:
+            print("HI")
+            self.show_error_message(self.search_rule_frame, rule_id)
+        else:
         #Fetch major details
-        major_details = self.handbook_db.fetch_rule_major(rule_id)
-        year = major_details[1]
-        major = major_details[0]
-        
-        for index, (rule_id, credit_points, units) in enumerate(rules_data):
-            self.create_search_rule_table(self.search_rule_frame, rule_id, credit_points, year, major,units, rule_id)
+            major_details = self.handbook_db.fetch_rule_major(rule_id)
+            year = major_details[1]
+            major = major_details[0]
+            
 
+            for index, (rule_id, credit_points, units) in enumerate(rules_data):
+                self.create_search_rule_table(self.search_rule_frame, rule_id, credit_points, year, major,units, rule_id)
+
+    def show_error_message(self, frame, rule_id):
+        rule_frame = tk.Frame(frame)
+        header_frame = tk.Frame(rule_frame)
+        header_frame.pack(fill="x")
+
+        tk.Label(header_frame, text=f"No rule found with ID {rule_id}", font=("Arial", 16)).pack(side="left")
+
+
+        rule_frame.pack(fill="x", padx=10, pady=5)
+        self.handbook_window.update_idletasks()
+        
+        
     def create_search_rule_table(self, frame, rule_name, credit_points,yr,major,units, rule_id):
         rule_frame = tk.Frame(frame)
         header_frame = tk.Frame(rule_frame)

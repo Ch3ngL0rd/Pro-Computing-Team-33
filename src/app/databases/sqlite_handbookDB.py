@@ -5,9 +5,18 @@ import sqlite3
 
 class Sqlite_handbookDB():
     def __init__(self) -> None:
-        self.conn = sqlite3.connect(':memory:')
-        # self.conn = sqlite3.connect('handbook.db')
-        self.create_db()
+        #self.conn = sqlite3.connect(':memory:')
+        self.conn = sqlite3.connect('handbook.db')
+        #self.create_db()
+
+    def db_commit(self):
+        """Commit changes to the database."""
+        try:
+            self.conn.commit()
+            self.conn.close()
+            print("Changes committed to the database.")
+        except Exception as e:
+            print(f"Error committing changes: {e}")
 
     def create_db(self):
         cursor = self.conn.cursor()
@@ -301,7 +310,7 @@ class Sqlite_handbookDB():
                        FROM Rules r
                        INNER JOIN MajorRules rm on r.rule_id = rm.rule_id
                        INNER JOIN Major m on rm.major_id = m.major_ID
-                       WHERE r.rule_id = ?""", rule_id)
+                       WHERE r.rule_id = ?""", (rule_id,))
         
         rows = cursor.fetchall()
         return (rows[0][0], rows[0][1])
