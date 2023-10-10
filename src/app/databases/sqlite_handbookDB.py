@@ -4,9 +4,9 @@ import sqlite3
 
 
 class Sqlite_handbookDB():
-    def __init__(self) -> None:
+    def __init__(self, handbook_db_path) -> None:
         #self.conn = sqlite3.connect(':memory:')
-        self.conn = sqlite3.connect('handbook.db')
+        self.conn = sqlite3.connect(handbook_db_path)
         #self.create_db()
 
     def db_commit(self):

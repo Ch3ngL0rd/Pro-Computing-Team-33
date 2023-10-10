@@ -2,12 +2,19 @@ from app.TkinterGui.main_window import Main_window
 from app.databases.sqlite_handbookDB import Sqlite_handbookDB
 from app.logic.marks_processor import Marks_processor
 
-handbook_db = Sqlite_handbookDB()
+import os
+
+
+# Get the directory where the main.py file is located
+current_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(current_dir)
+
+handbook_db_file = 'handbook.db'
+handbook_db_path = os.path.join(current_dir, handbook_db_file)
+handbook_db = Sqlite_handbookDB(handbook_db_path)
+
 
 def main():
-
-    #handbook_db.populate_sampleDB()
-
     marks_processor = Marks_processor(handbookDB=handbook_db)
 
     # marks_processor.process_file(input_filepath='../Example Data BE(Hons).xlsx',output_filepath='../Example Data BE(Hons)_output.xlsx')
