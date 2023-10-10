@@ -24,13 +24,100 @@ class Major_edit_window:
         notebook = ttk.Notebook(self.handbook_window)
         self.units_frame = ttk.Frame(notebook)
         self.majors_frame = ttk.Frame(notebook)
+        self.rules_search_frame = ttk.Frame(notebook)
         notebook.add(self.units_frame, text="Units")
         notebook.add(self.majors_frame, text="Majors")
+        notebook.add(self.rules_search_frame, text="Rules")
         notebook.pack(expand=1, fill="both")
 
         self.initialize_units_tab()
         self.initialize_majors_tab()
+        self.initialize_rules_tab()
         self.handbook_window.mainloop()
+
+    def initialize_rules_tab(self):
+        frame = tk.Frame(self.rules_search_frame)
+        frame.pack(side="top", fill="x", padx=5, pady=10)
+
+        # Create a new frame to hold the ID input and search button
+        input_frame = tk.Frame(frame)
+        input_frame.pack(side="left", fill="x")
+
+        # Create and place the ID input (text box) within the input_frame
+        self.rule_id_entry = tk.Entry(input_frame)
+        self.rule_id_entry.pack(side="left", padx=5)
+
+        # Create and place the search button next to the ID input
+        search_button = tk.Button(input_frame, text="Search", command=self.on_search_button_clicked)
+        search_button.pack(side="left", padx=5)
+
+        # Create a frame to hold the rule tables and put it inside the rules_search_frame
+        self.search_rule_frame = tk.Frame(self.rules_search_frame)
+        self.search_rule_frame.pack(fill="x", padx=5, pady=10)  # Pack it into the main rules tab frame
+
+    def on_search_button_clicked(self):
+        # Get the rule ID from the text box
+        rule_id = self.rule_id_entry.get()
+        
+        # Pass it to your search or refresh function (assuming it's `refresh_searched_rule`)
+        self.refresh_searched_rule(rule_id)
+
+
+    def refresh_searched_rule(self, value):
+        # Clear existing rules if any
+        for widget in self.search_rule_frame.winfo_children():
+            widget.destroy()
+        rule_id = self.rule_id_entry.get()
+        print(rule_id)
+        # Fetch new rules and populate
+        rules_data = self.handbook_db.fetch_rule_verbose(rule_id)
+        print(rules_data)
+        if rules_data == []:
+            print("HI")
+            self.show_error_message(self.search_rule_frame, rule_id)
+        else:
+        #Fetch major details
+            major_details = self.handbook_db.fetch_rule_major(rule_id)
+            year = major_details[1]
+            major = major_details[0]
+            
+
+            for index, (rule_id, credit_points, units) in enumerate(rules_data):
+                self.create_search_rule_table(self.search_rule_frame, rule_id, credit_points, year, major,units, rule_id)
+
+    def show_error_message(self, frame, rule_id):
+        rule_frame = tk.Frame(frame)
+        header_frame = tk.Frame(rule_frame)
+        header_frame.pack(fill="x")
+
+        tk.Label(header_frame, text=f"No rule found with ID {rule_id}", font=("Arial", 16)).pack(side="left")
+
+
+        rule_frame.pack(fill="x", padx=10, pady=5)
+        self.handbook_window.update_idletasks()
+        
+        
+    def create_search_rule_table(self, frame, rule_name, credit_points,yr,major,units, rule_id):
+        rule_frame = tk.Frame(frame)
+        header_frame = tk.Frame(rule_frame)
+        header_frame.pack(fill="x")
+
+        tk.Label(header_frame, text=f"{rule_name} From {major}, {yr} - Credit Points: {credit_points}", font=("Arial", 16)).pack(side="left")
+
+        # Create the main Treeview for displaying units
+        tree = ttk.Treeview(rule_frame, columns=("Unit Name", "Unit Credit Points"), show="headings")
+        tree.heading("#1", text="Unit Name")
+        tree.heading("#2", text="Unit Credit Points")
+
+        for unit in units:
+            unit_name, unit_credit_points = unit
+            tree.insert("", "end", values=(unit_name, unit_credit_points))
+
+        tree.pack(fill="both", expand=True)  # Ensure the treeview is packed and visible
+
+        rule_frame.pack(fill="x", padx=10, pady=5)
+        self.handbook_window.update_idletasks()
+
 
     def initialize_majors_tab(self):
         top_frame = tk.Frame(self.majors_frame)
@@ -40,13 +127,21 @@ class Major_edit_window:
         dropdown_frame = tk.Frame(top_frame)
         dropdown_frame.pack(side="left", fill="x")
 
+        # check case when there are no year_options
         year_options = self.handbook_db.fetch_years()
+
 
         # Create and place the Year dropdown within the dropdown_frame
         self.year_var = tk.StringVar()
         self.year_var.set("Select Year")
-        self.year_menu = tk.OptionMenu(
-            dropdown_frame, self.year_var, *year_options, command=self.update_major_dropdown)
+
+        if year_options:
+            self.year_menu = tk.OptionMenu(
+                dropdown_frame, self.year_var, *year_options, command=self.update_major_dropdown)
+        else:
+            self.year_menu = tk.OptionMenu(dropdown_frame, self.year_var, "Select Year")
+            self.year_menu.configure(state="disabled")
+
         self.year_menu.pack(side="left", anchor="n")
 
         # Create and place the Major dropdown within the dropdown_frame (initially empty and hidden)
@@ -65,11 +160,11 @@ class Major_edit_window:
         
         # Create and place the "Delete Major" button
         tk.Button(top_frame, text="Delete Major", command=self.delete_major).pack(
-    side='right', anchor="n", padx=5)
+            side='right', anchor="n", padx=5)
 
         # Create and place the "Add Rule" button
         tk.Button(top_frame, text="Add Rule", command=self.show_add_rule_dialog).pack(
-    side='right', anchor="n", padx=5)
+            side='right', anchor="n", padx=5)
 
 
         # Create a frame to hold the All Units section and the Rules Table section
@@ -333,8 +428,14 @@ class Major_edit_window:
         # Create and place the Year dropdown
         self.year_var_dup = tk.StringVar()
         self.year_var_dup.set("Select Year")
-        self.year_menu_dup = tk.OptionMenu(
-            dialog, self.year_var_dup, *year_options, command=self.update_major_dropdown_dup)
+
+        if year_options:
+            self.year_menu_dup = tk.OptionMenu(
+                dialog, self.year_var_dup, *year_options, command=self.update_major_dropdown_dup)
+        else:
+            self.year_menu_dup = tk.OptionMenu(dialog, self.year_var_dup, "Select Year")
+            self.year_menu_dup.configure(state="disabled")
+
         self.year_menu_dup.grid(row=3, column=0, columnspan=2)
 
         # Create and place the Major dropdown (initially empty)
