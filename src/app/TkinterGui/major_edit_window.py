@@ -127,13 +127,21 @@ class Major_edit_window:
         dropdown_frame = tk.Frame(top_frame)
         dropdown_frame.pack(side="left", fill="x")
 
+        # check case when there are no year_options
         year_options = self.handbook_db.fetch_years()
+
 
         # Create and place the Year dropdown within the dropdown_frame
         self.year_var = tk.StringVar()
         self.year_var.set("Select Year")
-        self.year_menu = tk.OptionMenu(
-            dropdown_frame, self.year_var, *year_options, command=self.update_major_dropdown)
+
+        if year_options:
+            self.year_menu = tk.OptionMenu(
+                dropdown_frame, self.year_var, *year_options, command=self.update_major_dropdown)
+        else:
+            self.year_menu = tk.OptionMenu(dropdown_frame, self.year_var, "Select Year")
+            self.year_menu.configure(state="disabled")
+
         self.year_menu.pack(side="left", anchor="n")
 
         # Create and place the Major dropdown within the dropdown_frame (initially empty and hidden)
@@ -152,11 +160,11 @@ class Major_edit_window:
         
         # Create and place the "Delete Major" button
         tk.Button(top_frame, text="Delete Major", command=self.delete_major).pack(
-    side='right', anchor="n", padx=5)
+            side='right', anchor="n", padx=5)
 
         # Create and place the "Add Rule" button
         tk.Button(top_frame, text="Add Rule", command=self.show_add_rule_dialog).pack(
-    side='right', anchor="n", padx=5)
+            side='right', anchor="n", padx=5)
 
 
         # Create a frame to hold the All Units section and the Rules Table section
@@ -420,8 +428,14 @@ class Major_edit_window:
         # Create and place the Year dropdown
         self.year_var_dup = tk.StringVar()
         self.year_var_dup.set("Select Year")
-        self.year_menu_dup = tk.OptionMenu(
-            dialog, self.year_var_dup, *year_options, command=self.update_major_dropdown_dup)
+
+        if year_options:
+            self.year_menu_dup = tk.OptionMenu(
+                dialog, self.year_var_dup, *year_options, command=self.update_major_dropdown_dup)
+        else:
+            self.year_menu_dup = tk.OptionMenu(dialog, self.year_var_dup, "Select Year")
+            self.year_menu_dup.configure(state="disabled")
+
         self.year_menu_dup.grid(row=3, column=0, columnspan=2)
 
         # Create and place the Major dropdown (initially empty)

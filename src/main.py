@@ -17,8 +17,6 @@ handbook_db = Sqlite_handbookDB(handbook_db_path)
 def main():
     marks_processor = Marks_processor(handbookDB=handbook_db)
 
-    # marks_processor.process_file(input_filepath='../Example Data BE(Hons).xlsx',output_filepath='../Example Data BE(Hons)_output.xlsx')
-
     main_window = Main_window(marks_processor=marks_processor, handbook_db=handbook_db)
     main_window.draw_window()
 
