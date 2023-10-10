@@ -93,16 +93,16 @@ class Marks_processor():
                     required_credit_points = rule[1]
                     current_credit_points = 0
 
-                    # Zero credit point unit check
-                    zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
-                    for z_unit in zero_cp_units:
-                        if z_unit not in unit_codes:
-                            if index[0] not in comments:
-                                comments[index[0]] = {}
-                            if major_id not in comments[index[0]]:
-                                comments[index[0]][major_id] = []
-                            comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {z_unit}')
-                            major_eligable = False
+                    # # Zero credit point unit check
+                    # zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
+                    # for z_unit in zero_cp_units:
+                    #     if z_unit not in unit_codes:
+                    #         if index[0] not in comments:
+                    #             comments[index[0]] = {}
+                    #         if major_id not in comments[index[0]]:
+                    #             comments[index[0]][major_id] = []
+                    #         comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {z_unit}')
+                    #         major_eligable = False
 
                     for unit in rule[2]:
                         if unit[0] in unit_codes:
