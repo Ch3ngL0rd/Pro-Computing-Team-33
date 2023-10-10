@@ -37,19 +37,19 @@ class Sqlite_handbookDB():
         ''')
 
         cursor.execute('''
-        CREATE TABLE RuleUnits (
-            unit_code TEXT,
-            rule_id INTEGER,
-            FOREIGN KEY(unit_code) REFERENCES Units(unit_code) ON DELETE CASCADE,
-            FOREIGN KEY(rule_id) REFERENCES Rule(rule_id),
-            PRIMARY KEY(unit_code, rule_id)
+        CREATE TABLE Rules (
+            rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            value INTEGER
         );
         ''')
 
         cursor.execute('''
-        CREATE TABLE Rules (
-            rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            value INTEGER
+        CREATE TABLE RuleUnits (
+            unit_code TEXT,
+            rule_id INTEGER,
+            FOREIGN KEY(unit_code) REFERENCES Units(unit_code) ON DELETE CASCADE,
+            FOREIGN KEY(rule_id) REFERENCES Rules(rule_id),
+            PRIMARY KEY(unit_code, rule_id)
         );
         ''')
 
@@ -62,14 +62,14 @@ class Sqlite_handbookDB():
         ''')
 
         cursor.execute('''
-        CREATE TABLE MajorRules (
-            major_id INTEGER,
-            rule_id INTEGER,
-            FOREIGN KEY(major_id) REFERENCES Major(major_id),
-            FOREIGN KEY(rule_id) REFERENCES Rules(rule_id),
-            PRIMARY KEY(major_id, rule_id)
-        );
-        ''')
+            CREATE TABLE MajorRules (
+                major_id INTEGER,
+                rule_id INTEGER,
+                FOREIGN KEY(major_id) REFERENCES Major(major_id) ON DELETE CASCADE,
+                FOREIGN KEY(rule_id) REFERENCES Rules(rule_id),
+                PRIMARY KEY(major_id, rule_id)
+            );
+            ''')
 
     def duplicate_major(self, src_major, src_yr, nw_major, nw_yr):
         cursor_major = self.create_major(nw_major, nw_yr)
@@ -247,6 +247,14 @@ class Sqlite_handbookDB():
 
         cursor.execute("DELETE FROM units where unit_code=?", (unit_code,))
 
+    def delete_major(self, major_id):
+        cursor = self.conn.cursor()
+        
+        cursor.execute("DELETE FROM Major WHERE major_id=?", (major_id,))
+
+        # deletes rules as well
+        cursor.execute("DELETE FROM MajorRules WHERE major_id=?", (major_id,))
+
     def fetch_all_units(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT unit_code FROM units")
@@ -365,13 +373,13 @@ class Sqlite_handbookDB():
 
     def fetch_major_rules_verbose(self, major, year):
         cursor = self.conn.cursor()
-        """Fetches the rules for a major in a given year, including the unit codes for each rule and credit points for each unit"""
+        """Fetches the rules for a major in a given year, including the unit codes for each rule and credit points for each unit (if available)"""
         cursor.execute("""
             SELECT r.*, GROUP_CONCAT(u.UNIT_CODE), GROUP_CONCAT(u.CREDIT_PTS)
             FROM Rules r
             INNER JOIN MajorRules rm ON r.rule_id = rm.rule_id
-            INNER JOIN RuleUnits ur ON r.rule_id = ur.rule_id
-            INNER JOIN Units u ON ur.unit_code = u.unit_code
+            LEFT JOIN RuleUnits ur ON r.rule_id = ur.rule_id
+            LEFT JOIN Units u ON ur.unit_code = u.unit_code
             INNER JOIN Major m ON rm.major_id = m.major_ID
             WHERE m.name = ? AND m.year = ?
             GROUP BY r.rule_id
@@ -381,16 +389,22 @@ class Sqlite_handbookDB():
         for row in rows:
             rule_id = row[0]
             credit_points = row[1]
-            unit_names = row[2].split(',')
-            unit_credits = list(map(int, row[3].split(',')))
+            
+            # Check if the rule has associated units
+            if row[2] and row[3]:
+                unit_names = row[2].split(',')
+                unit_credits = list(map(int, row[3].split(',')))
 
-            # Zip unit_names and unit_credits into a list of tuples
-            unit_list = list(zip(unit_names, unit_credits))
+                # Zip unit_names and unit_credits into a list of tuples
+                unit_list = list(zip(unit_names, unit_credits))
+            else:
+                unit_list = []
 
             # Create the final dictionary for each rule
             results.append((rule_id, credit_points, unit_list))
 
         return results
+
 
     def get_major_id(self, major, year):
         cursor = self.conn.cursor()

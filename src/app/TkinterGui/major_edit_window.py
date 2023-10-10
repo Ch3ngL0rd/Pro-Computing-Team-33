@@ -149,6 +149,15 @@ class Major_edit_window:
         # Create and place the "Add Major" button
         tk.Button(top_frame, text="Add Major", command=self.show_add_major_dialog).pack(
             side="right", anchor="n")
+        
+        # Create and place the "Delete Major" button
+        tk.Button(top_frame, text="Delete Major", command=self.delete_major).pack(
+    side='right', anchor="n", padx=5)
+
+        # Create and place the "Add Rule" button
+        tk.Button(top_frame, text="Add Rule", command=self.show_add_rule_dialog).pack(
+    side='right', anchor="n", padx=5)
+
 
         # Create a frame to hold the All Units section and the Rules Table section
         self.handbook_window.bind("<ButtonRelease-1>", self.end_drag)
@@ -158,6 +167,45 @@ class Major_edit_window:
 
         # Initialize the Rules Table section (Right 2/3)
         self.initialize_rules_section()
+
+    def refresh_majors_tab(self, *args):
+        # Clear existing rules if any
+        for widget in self.majors_frame.winfo_children():
+            widget.destroy()
+
+        # Reinitialize the majors tab
+        self.initialize_majors_tab()
+
+    def show_add_rule_dialog(self):
+        dialog = tk.Toplevel(self.handbook_window)
+        dialog.transient(self.handbook_window)
+        dialog.grab_set()
+
+        tk.Label(dialog, text="Credit Points:").grid(row=0, column=0, padx=10, pady=10)
+
+        credit_points_entry = tk.Entry(dialog)
+        credit_points_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        def add_rule():
+            try:
+                credit_points = int(credit_points_entry.get())
+            except ValueError:
+                # Handle non-integer input, you can show an error dialog or a message
+                print("Please enter a valid integer for credit points.")
+                return
+
+            # Add the rule and get its ID
+            rule_id = self.handbook_db.create_rule_and_get_id(credit_points)
+            
+            # Link the rule to the current selected major
+            major_id = self.handbook_db.get_major_id(self.major_var.get(), self.year_var.get())  # Assuming you have a method to get major_id based on major name and year
+            self.handbook_db.link_major_rule(major_id, rule_id)
+
+            
+            dialog.destroy()
+            self.refresh_rules_section()
+
+        tk.Button(dialog, text="OK", command=add_rule).grid(row=1, columnspan=2, padx=10, pady=10)
 
     def initialize_all_units_section(self):
         # Create a frame for the "All Units" section
@@ -176,10 +224,10 @@ class Major_edit_window:
 
         # Create a Treeview to display all units
         self.all_units_tree = ttk.Treeview(all_units_frame, columns=(
-            "Unit Name", "Credit Points"), show="headings")
+            "Unit Code", "Credit Points"), show="headings")
 
 
-        self.all_units_tree.heading("#1", text="Unit Name")
+        self.all_units_tree.heading("#1", text="Unit Code")
         self.all_units_tree.heading("#2", text="Credit Points")
         self.all_units_tree.pack(fill="both", expand=True, padx=5, pady=5)
         self.all_units_tree.bind("<ButtonPress-1>", self.start_drag)
@@ -234,6 +282,7 @@ class Major_edit_window:
             year=self.year_var.get()
         )
 
+        print(rules_data)
 
         for index, (rule_id, credit_points, units) in enumerate(rules_data):
             self.create_rule_table(self.rules_frame, index+1, credit_points, units,rule_id)
@@ -264,8 +313,8 @@ class Major_edit_window:
         tk.Button(header_frame, text="Delete Rule", command=delete_rule).pack(side="right")
 
         # Create the main Treeview for displaying units
-        tree = ttk.Treeview(rule_frame, columns=("Unit Name", "Unit Credit Points"), show="headings")
-        tree.heading("#1", text="Unit Name")
+        tree = ttk.Treeview(rule_frame, columns=("Unit Code", "Unit Credit Points"), show="headings")
+        tree.heading("#1", text="Unit Code")
         tree.heading("#2", text="Unit Credit Points")
 
         # Create the Delete Treeview for delete actions
@@ -316,7 +365,7 @@ class Major_edit_window:
         print(f"Adding {unit} to {rule_id}")  # Debugging print statement
         self.handbook_db.link_unit_rule(unit[0], rule_id)
         self.refresh_rules_section()
-    def update_major_dropdown(self, selected_year):
+    def update_major_dropdown(self, selected_year): 
         # Update the Major dropdown based on the selected year
         # Fetch majors for the selected year from the database
         self.major_var.set("Select Major")
@@ -324,6 +373,9 @@ class Major_edit_window:
 
         # Clear the current options in the major dropdown
         self.major_menu["menu"].delete(0, "end")
+
+        # Sort alphabetically
+        majors_for_year.sort()
 
         # Populate the major dropdown with new options
         for major in majors_for_year:
@@ -372,8 +424,6 @@ class Major_edit_window:
             dialog, self.year_var_dup, *year_options, command=self.update_major_dropdown_dup)
         self.year_menu_dup.grid(row=3, column=0, columnspan=2)
 
-    
-
         # Create and place the Major dropdown (initially empty)
         self.major_var_dup = tk.StringVar()
         self.major_var_dup.set("Select Major")
@@ -394,12 +444,21 @@ class Major_edit_window:
                 print(self.handbook_db.fetch_major_rules_verbose(major_name, int(year)))
             
             dialog.destroy()
+            self.refresh_majors_tab()
 
         tk.Button(dialog, text="OK", command=add_major).grid(
             row=5, columnspan=2)
 
     # Units Functionality
-    
+    def delete_major(self):
+        selected_major = self.major_var.get()
+        if selected_major != "Select Major":
+            major_id = self.handbook_db.get_major_id(selected_major, self.year_var.get())
+            self.handbook_db.delete_major(major_id)
+            self.refresh_majors_tab()
+            self.refresh_unit_section()
+        else:
+            print("No Major selected to delete.")
 
     
     def initialize_units_tab(self):
@@ -439,8 +498,8 @@ class Major_edit_window:
 
         # Create Treeview with height set to 10 rows
         self.tree = ttk.Treeview(self.units_frame, columns=(
-            "Unit Name", "Credit Points"), show="headings", height=10)
-        self.tree.heading("#1", text="Unit Name")
+            "Unit Code", "Credit Points"), show="headings", height=10)
+        self.tree.heading("#1", text="Unit Code")
         self.tree.heading("#2", text="Credit Points")
         
         self.unit_delete_tree = ttk.Treeview(self.units_frame, columns=("Actions"), show="headings")
@@ -493,7 +552,7 @@ class Major_edit_window:
         dialog.transient(self.handbook_window)
         dialog.grab_set()
 
-        tk.Label(dialog, text="Unit Name:").grid(
+        tk.Label(dialog, text="Unit Code:").grid(
             row=0, column=0, padx=10, pady=10)
         tk.Label(dialog, text="Credit Points:").grid(
             row=1, column=0, padx=10, pady=10)

@@ -34,9 +34,6 @@ class Main_window():
         menu_frame.grid(row=0, column=0, padx=10, pady=10, sticky='nsew')
         menu_frame_button_options = {"pady":5, "padx":5,}
 
-        settings_button = tk.Button(menu_frame, text="Settings", command=self.root.quit)
-        settings_button.grid(row=0, column=0, sticky='w', **menu_frame_button_options)
-
         modify_handbook_button = tk.Button(menu_frame, text="Modify Handbook",
                                            command=self.open_major_edit_window)
         modify_handbook_button.grid(row=0, column=1, sticky='w', **menu_frame_button_options)

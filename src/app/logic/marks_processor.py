@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas import ExcelWriter
 
 class Marks_processor():
     def __init__(self, handbookDB) -> None:
@@ -91,6 +92,18 @@ class Marks_processor():
                 for rule in rules:
                     required_credit_points = rule[1]
                     current_credit_points = 0
+
+                    # Zero credit point unit check
+                    zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
+                    for z_unit in zero_cp_units:
+                        if z_unit not in unit_codes:
+                            if index[0] not in comments:
+                                comments[index[0]] = {}
+                            if major_id not in comments[index[0]]:
+                                comments[index[0]][major_id] = []
+                            comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {z_unit}')
+                            major_eligable = False
+
                     for unit in rule[2]:
                         if unit[0] in unit_codes:
                             current_credit_points += unit[1]
@@ -102,6 +115,12 @@ class Marks_processor():
                         # Missing [number of missing credit points] credit points for [rule id]
                         comments[index[0]][major_id].append(f'Missing {required_credit_points - current_credit_points} credit points for rule {rule[0]}')
                         major_eligable = False
+
+                    # Find all the units that are 0 credit points
+                    # Check that the student has completed it
+                    # Otherwise major_eligable = False, and add a comment 
+
+
                 if major_eligable:
                     eligable = True
                     if index[0] not in student_eligable:
@@ -158,8 +177,6 @@ class Marks_processor():
         # Assign Honours classification
         merged_data_adjusted['Honours Class'] = merged_data_adjusted.apply(self.assign_honours, axis=1)
 
-        # TODO: Add in honours classification
-
         # Turns Person_ID into a string
         merged_data_adjusted['Person_ID'] = merged_data_adjusted['Person_ID'].astype(str)
 
@@ -177,7 +194,6 @@ class Marks_processor():
                     merged_data_adjusted.at[index, 'Missing Information (Y/N)'] = 'Y'
                     comment_string = ''
                     for major_id in comments[person_id]:
-                        comment_string += f'Major ID {major_id}: '
                         comment_string += ', '.join(comments[person_id][major_id])
                         comment_string += '\n'
                     merged_data_adjusted.at[index, 'Comments (missing information)'] = comment_string
@@ -188,7 +204,13 @@ class Marks_processor():
         # Order of columns
         merged_data_adjusted = merged_data_adjusted[['Person_ID', 'Surname', 'Given Names', 'Course_Code', 'Course_Title', 'Major_Deg', 'Completed GENG4412 (Y/N)','GENG4412 Mark', 'EH-WAM',  'Honours Class', 'Missing Information (Y/N)', 'Comments (missing information)']]
         # Save the processed data to an output Excel file (optional)
-        merged_data_adjusted.to_excel(output_filepath, index=False)
+        with ExcelWriter(output_filepath, engine='openpyxl') as writer:
+            merged_data_adjusted.to_excel(writer, index=False, sheet_name='Sheet1')
+
+            # Access the workbook and worksheet to set the auto-filter
+            worksheet = writer.sheets['Sheet1']
+            worksheet.auto_filter.ref = worksheet.dimensions
+
 
         return merged_data_adjusted
     
