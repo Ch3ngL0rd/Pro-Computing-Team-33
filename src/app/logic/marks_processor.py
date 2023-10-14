@@ -1,6 +1,7 @@
 import pandas as pd
 from pandas import ExcelWriter
 
+
 class Marks_processor():
     def __init__(self, handbookDB) -> None:
         self.handbookDB = handbookDB
@@ -91,7 +92,7 @@ class Marks_processor():
                 rules = self.handbookDB.fetch_major_rules_verbose_by_id(major_id)
                 for rule in rules:
                     required_credit_points = rule[1]
-                    current_credit_points = 0
+                    current_credit_points = None
 
                     # # Zero credit point unit check
                     # zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
@@ -103,10 +104,22 @@ class Marks_processor():
                     #             comments[index[0]][major_id] = []
                     #         comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {z_unit}')
                     #         major_eligable = False
+                    #
 
                     for unit in rule[2]:
                         if unit[0] in unit_codes:
-                            current_credit_points += unit[1]
+                            try:
+                                current_credit_points += unit[1]
+                            except TypeError:
+                                current_credit_points = 0
+                                current_credit_points += unit[1]
+                    # in the case the student hasnt done any units in a rule
+                    if current_credit_points is None:
+                        current_credit_points = 0
+                        # in the special case this rule has required_credit_points = 0
+                        if required_credit_points == 0:
+                            comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {rule[0]}')
+                                
                     if current_credit_points < required_credit_points:
                         if index[0] not in comments:
                             comments[index[0]] = {}
@@ -214,7 +227,6 @@ class Marks_processor():
 
         return merged_data_adjusted
     
-    # Need to implement handbook db into wam calculations
     # Eligability checks and process into comments
     '''
     We want
