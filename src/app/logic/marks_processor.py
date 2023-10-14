@@ -52,6 +52,14 @@ class Marks_processor():
 
         return core_units
     
+    def completed_sufficient_units(self, student_data):
+        credit_count = 0
+        for unit in student_data:
+            if self.passed(unit[1]):
+                credit_count += int(unit[2])
+        return credit_count
+            
+    
     def passed(self, grade):
         # HD,D,CR,P,UP,PS,PA 
         if grade in ['HD', 'D', 'CR', 'P', 'UP', 'PS', 'PA']:
@@ -126,6 +134,19 @@ class Marks_processor():
                     if index[0] not in student_eligable:
                         student_eligable[index[0]] = []
                     student_eligable[index[0]].append(major_id)
+                    
+            if eligable:
+                units_done = self.completed_sufficient_units(row)
+                eligable = (units_done >= 192)
+                if not eligable:
+                    if index[0] not in comments:
+                        comments[index[0]] = {}
+                    if major_id not in comments[index[0]]:
+                        comments[index[0]][major_id] = []
+                    if index[0] not in student_eligable:
+                        student_eligable[index[0]] = []    
+                    comments[index[0]][major_id].append(f"Insufficient credit points to graduate. Completed {units_done} credit points of 192")
+                    student_eligable[index[0]][0] = 'Not Eligable'
             if not eligable:
                 if index[0] not in student_eligable:
                     student_eligable[index[0]] = []
@@ -190,6 +211,7 @@ class Marks_processor():
         for index, row in merged_data_adjusted.iterrows():
             person_id = int(row['Person_ID'])
             if person_id in comments:
+                print(student_eligable[person_id][0])
                 if student_eligable[person_id][0] == 'Not Eligable':
                     merged_data_adjusted.at[index, 'Missing Information (Y/N)'] = 'Y'
                     comment_string = ''
@@ -197,9 +219,9 @@ class Marks_processor():
                         comment_string += ', '.join(comments[person_id][major_id])
                         comment_string += '\n'
                     merged_data_adjusted.at[index, 'Comments (missing information)'] = comment_string
-            else:
-                merged_data_adjusted.at[index, 'Missing Information (Y/N)'] = 'N'
-                merged_data_adjusted.at[index, 'Comments (missing information)'] = ''
+                else:
+                    merged_data_adjusted.at[index, 'Missing Information (Y/N)'] = 'N'
+                    merged_data_adjusted.at[index, 'Comments (missing information)'] = ''
 
         # Order of columns
         merged_data_adjusted = merged_data_adjusted[['Person_ID', 'Surname', 'Given Names', 'Course_Code', 'Course_Title', 'Major_Deg', 'Completed GENG4412 (Y/N)','GENG4412 Mark', 'EH-WAM',  'Honours Class', 'Missing Information (Y/N)', 'Comments (missing information)']]
