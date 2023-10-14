@@ -239,22 +239,22 @@ class Major_edit_window:
         self.all_units_tree.heading("#2", text="Credit Points")
         
                 # Create the Delete Treeview for delete actions
-        self.unit_select_tree = ttk.Treeview(all_units_frame, columns=("Actions"), show="headings")
-        self.unit_select_tree.heading("#1", text="Actions")
+        #self.unit_select_tree = ttk.Treeview(all_units_frame, columns=("Actions"), show="headings")
+        #self.unit_select_tree.heading("#1", text="Actions")
 
-        self.unit_select_tree.bind("<ButtonRelease-1>", self.select_unit)
+        self.all_units_tree.bind("<ButtonRelease-1>", self.select_unit)
 
-        self.unit_select_tree.pack(fill = "both",side="right")
+        #self.unit_select_tree.pack(fill = "both",side="right")
         
         
         self.all_units_tree.pack(fill = "both", side="left")
-        self.all_units_tree.bind("<ButtonPress-1>", self.start_drag)
+        #self.all_units_tree.bind("<ButtonPress-1>", self.start_drag)
 
         # Populate the Treeview
         self.populate_all_units()
         
     def select_unit(self, event):
-        item = self.unit_select_tree.selection()[0]
+        item = self.all_units_tree.selection()[0]
         values = self.all_units_tree.item(item, 'values')
         self.unit_selection = values[0]
         print(self.unit_selection)
@@ -262,19 +262,19 @@ class Major_edit_window:
     def populate_all_units(self):
         for unit in self.handbook_db.fetch_all_units_with_credit():
             self.all_units_tree.insert("", "end", values=unit)
-            self.unit_select_tree.insert("", "end", values=("Select",))
+            #self.unit_select_tree.insert("", "end", values=("Select",))
 
     def update_search_major(self, event):
         search_term = event.widget.get().lower()
         # Clear current tree view
         self.all_units_tree.delete(*self.all_units_tree.get_children())
-        self.unit_select_tree.delete(*self.unit_select_tree.get_children())
+        #self.unit_select_tree.delete(*self.unit_select_tree.get_children())
         for unit in self.handbook_db.fetch_all_units_with_credit():
             unit_name, credit_points = unit
             if search_term in unit_name.lower():
                 self.all_units_tree.insert(
                     "", "end", values=(unit_name, credit_points))
-                self.unit_select_tree.insert("", "end", values=("Select",))
+                #self.unit_select_tree.insert("", "end", values=("Select",))
                 
     def refresh_major_units(self):
         self.all_units_tree.delete(*self.all_units_tree.get_children())
