@@ -234,18 +234,35 @@ class Major_edit_window:
         self.all_units_tree = ttk.Treeview(all_units_frame, columns=(
             "Unit Code", "Credit Points"), show="headings")
 
-
+        self.unit_selection = ""
         self.all_units_tree.heading("#1", text="Unit Code")
         self.all_units_tree.heading("#2", text="Credit Points")
-        self.all_units_tree.pack(fill="both", expand=True, padx=5, pady=5)
+        
+                # Create the Delete Treeview for delete actions
+        self.unit_select_tree = ttk.Treeview(all_units_frame, columns=("Actions"), show="headings")
+        self.unit_select_tree.heading("#1", text="Actions")
+
+        self.unit_select_tree.bind("<ButtonRelease-1>", self.select_unit)
+
+        self.unit_select_tree.pack(fill = "both",side="right")
+        
+        
+        self.all_units_tree.pack(fill = "both", side="left")
         self.all_units_tree.bind("<ButtonPress-1>", self.start_drag)
 
         # Populate the Treeview
         self.populate_all_units()
-
+        
+    def select_unit(self, event):
+        item = self.unit_select_tree.selection()[0]
+        values = self.all_units_tree.item(item, 'values')
+        self.unit_selection = values[0]
+        print(self.unit_selection)
+        
     def populate_all_units(self):
         for unit in self.handbook_db.fetch_all_units_with_credit():
             self.all_units_tree.insert("", "end", values=unit)
+            self.unit_select_tree.insert("", "end", values=("Select",))
 
     def update_search_major(self, event):
         search_term = event.widget.get().lower()
@@ -297,6 +314,11 @@ class Major_edit_window:
 
 
     def create_rule_table(self, frame, rule_name, credit_points, units, rule_id):
+        def add_unit():
+            if(self.unit_selection != ""):
+                self.add_unit_to_rule(rule_id, self.unit_selection)
+                self.unit_selection = ""
+        
         def delete_rule():
             print(f"Deleting {rule_name}")
             self.handbook_db.delete_rule( rule_id)
@@ -319,6 +341,7 @@ class Major_edit_window:
 
         tk.Label(header_frame, text=f"{rule_name} - Credit Points: {credit_points}", font=("Arial", 16)).pack(side="left")
         tk.Button(header_frame, text="Delete Rule", command=delete_rule).pack(side="right")
+        tk.Button(header_frame, text="Add Unit", command=add_unit).pack(side="right")
 
         # Create the main Treeview for displaying units
         tree = ttk.Treeview(rule_frame, columns=("Unit Code", "Unit Credit Points"), show="headings")
@@ -353,12 +376,7 @@ class Major_edit_window:
             pass
     
     def end_drag(self, event):
-        x, y = event.x, event.y
-        print("Dropped at:", x, y)
-        target_rule = self.find_target_rule(x, y)
-        if target_rule:
-            self.add_unit_to_rule(target_rule, self.dragging_unit)
-        self.dragging_unit = None
+        None
 
     def find_target_rule(self, x, y):
         for rule_id, rule_x, rule_y, width, height in self.tables:
@@ -371,7 +389,7 @@ class Major_edit_window:
         if unit is None:
             return
         print(f"Adding {unit} to {rule_id}")  # Debugging print statement
-        self.handbook_db.link_unit_rule(unit[0], rule_id)
+        self.handbook_db.link_unit_rule(unit, rule_id)
         self.refresh_rules_section()
     def update_major_dropdown(self, selected_year): 
         # Update the Major dropdown based on the selected year
