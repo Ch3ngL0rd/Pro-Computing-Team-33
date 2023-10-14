@@ -268,11 +268,13 @@ class Major_edit_window:
         search_term = event.widget.get().lower()
         # Clear current tree view
         self.all_units_tree.delete(*self.all_units_tree.get_children())
+        self.unit_select_tree.delete(*self.unit_select_tree.get_children())
         for unit in self.handbook_db.fetch_all_units_with_credit():
             unit_name, credit_points = unit
             if search_term in unit_name.lower():
                 self.all_units_tree.insert(
                     "", "end", values=(unit_name, credit_points))
+                self.unit_select_tree.insert("", "end", values=("Select",))
                 
     def refresh_major_units(self):
         self.all_units_tree.delete(*self.all_units_tree.get_children())
