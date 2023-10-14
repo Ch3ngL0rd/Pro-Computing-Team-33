@@ -222,6 +222,9 @@ class Marks_processor():
                 else:
                     merged_data_adjusted.at[index, 'Missing Information (Y/N)'] = 'N'
                     merged_data_adjusted.at[index, 'Comments (missing information)'] = ''
+            else:
+                merged_data_adjusted.at[index, 'Missing Information (Y/N)'] = 'N'
+                merged_data_adjusted.at[index, 'Comments (missing information)'] = ''
 
         # Order of columns
         merged_data_adjusted = merged_data_adjusted[['Person_ID', 'Surname', 'Given Names', 'Course_Code', 'Course_Title', 'Major_Deg', 'Completed GENG4412 (Y/N)','GENG4412 Mark', 'EH-WAM',  'Honours Class', 'Missing Information (Y/N)', 'Comments (missing information)']]
