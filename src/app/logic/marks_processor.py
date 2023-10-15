@@ -83,8 +83,6 @@ class Marks_processor():
         eligability_data = eligability_data.groupby(['Person_ID', 'Major_Deg']).apply(
             lambda x: x[['Unit_Code','Grade','Relevant_Credit_Points']].values.tolist()
         )
-        # prints all of the first person 
-        print(eligability_data[23001000].values.tolist())
 
         comments = {}
         student_eligable = {}
@@ -105,7 +103,10 @@ class Marks_processor():
 
                     # Zero credit point unit check
                     zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
-                    print(f'Zero credit point units: {zero_cp_units}')
+                    
+                    # Filter out GENG4411 since GENG4412 is taken sequentially and will flag as not eligable
+                    zero_cp_units = [unit for unit in zero_cp_units if unit != 'GENG4411']
+
                     for z_unit in zero_cp_units:
                         if z_unit not in unit_codes:
                             if index[0] not in comments:
@@ -210,13 +211,10 @@ class Marks_processor():
         merged_data_adjusted['Missing Information (Y/N)'] = ''
         merged_data_adjusted['Comments (missing information)'] = ''
 
-        print(f"\033[91m{merged_data_adjusted}\033[00m")
-
         # Add in comments only if the student is not eligable
         for index, row in merged_data_adjusted.iterrows():
             person_id = int(row['Person_ID'])
             if person_id in comments:
-                print(student_eligable[person_id][0])
                 if student_eligable[person_id][0] == 'Not Eligable':
                     merged_data_adjusted.at[index, 'Missing Information (Y/N)'] = 'Y'
                     comment_string = ''
