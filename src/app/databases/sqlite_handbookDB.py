@@ -26,64 +26,6 @@ class Sqlite_handbookDB():
         except Exception as e:
             print(f"Error committing changes: {e}")
 
-    def create_db(self):
-        """
-        Creates tables in the SQLite database.
-        
-        Specifically, creates tables for Units, Groups, Rules, RuleUnits, Major, and MajorRules.
-        """
-        cursor = self.conn.cursor()
-
-        # Create Tables
-        cursor.execute('''
-        CREATE TABLE Units (
-            unit_code TEXT PRIMARY KEY,
-            credit_pts INTEGER
-        );
-        ''')
-
-        cursor.execute('''
-        CREATE TABLE Groups (
-            group_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT
-        );
-        ''')
-
-        cursor.execute('''
-        CREATE TABLE Rules (
-            rule_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            value INTEGER
-        );
-        ''')
-
-        cursor.execute('''
-        CREATE TABLE RuleUnits (
-            unit_code TEXT,
-            rule_id INTEGER,
-            FOREIGN KEY(unit_code) REFERENCES Units(unit_code) ON DELETE CASCADE,
-            FOREIGN KEY(rule_id) REFERENCES Rules(rule_id),
-            PRIMARY KEY(unit_code, rule_id)
-        );
-        ''')
-
-        cursor.execute('''
-        CREATE TABLE Major (
-            major_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            year INTEGER
-        );
-        ''')
-
-        cursor.execute('''
-            CREATE TABLE MajorRules (
-                major_id INTEGER,
-                rule_id INTEGER,
-                FOREIGN KEY(major_id) REFERENCES Major(major_id) ON DELETE CASCADE,
-                FOREIGN KEY(rule_id) REFERENCES Rules(rule_id),
-                PRIMARY KEY(major_id, rule_id)
-            );
-            ''')
-
     def duplicate_major(self, src_major, src_yr, nw_major, nw_yr):
         """
         Duplicates a major from a specified year to a new major and year.
