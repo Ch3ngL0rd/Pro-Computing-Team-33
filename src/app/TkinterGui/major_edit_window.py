@@ -504,13 +504,24 @@ class Major_edit_window:
             self.refresh_major_units()
             self.refresh_rules_section()
         
+        def delete_unit():
+            if self.delete_unit_selection != "":
+                delete_unit_tree(self.delete_unit_selection)
+                self.delete_unit_selection = ""
+                
+        
         def on_delete_tree_select(event):
             item = self.unit_delete_tree.selection()[0]
             values = self.tree.item(item, 'values')
             unit_name = values[0]
             delete_unit_tree(unit_name)
-        
-        
+            
+        def select_delete_unit(event):
+            item = self.tree.selection()[0]
+            values = self.tree.item(item, 'values')
+            self.delete_unit_selection = values[0]
+            print(self.delete_unit_selection)
+                                    
         # Create a frame to hold the search bar and button
         top_frame = tk.Frame(self.units_frame)
         top_frame.pack(fill='x')
@@ -529,26 +540,20 @@ class Major_edit_window:
         # Create New Unit Button
         tk.Button(top_frame, text="Create New Unit", command=self.show_add_unit_dialog).pack(
             side='right', pady=10)  # Pack to the right side of the frame
+        
+        tk.Button(top_frame, text="Delete Unit", command=delete_unit).pack(
+            side='right', pady=10)  # Pack to the right side of the frame
 
         # Create Treeview with height set to 10 rows
         self.tree = ttk.Treeview(self.units_frame, columns=(
             "Unit Code", "Credit Points"), show="headings", height=10)
         self.tree.heading("#1", text="Unit Code")
         self.tree.heading("#2", text="Credit Points")
-        
-        self.unit_delete_tree = ttk.Treeview(self.units_frame, columns=("Actions"), show="headings")
-        self.unit_delete_tree.heading("#1", text="Actions")
-        
-        self.unit_delete_tree.bind("<ButtonRelease-1>", on_delete_tree_select)
-
-        #delete_tree.bind("<ButtonRelease-1>", on_delete_tree_select)
-
-        #tree.pack(side="left", fill="x")
+        self.delete_unit_selection = ""
         self.tree.pack(side = "left", fill='both',  expand = True)
-        self.unit_delete_tree.pack(side="left", fill="both",)
-        
-        
 
+        self.tree.bind("<ButtonRelease-1>", select_delete_unit)
+        #tree.pack(side="left", fill="x")
 
         self.populate_units()
 
@@ -567,11 +572,11 @@ class Major_edit_window:
             unit_name, credit_points = unit
             if search_term in unit_name.lower():
                 self.tree.insert("", "end", values=(unit_name, credit_points))
+                
 
     def populate_units(self):
         for unit in self.handbook_db.fetch_all_units_with_credit():
             self.tree.insert("", "end", values=unit)
-            self.unit_delete_tree.insert("", "end", values="Delete")
     
     def refresh_unit_section(self, *args):
         # Clear existing rules if any
