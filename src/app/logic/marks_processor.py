@@ -1,6 +1,9 @@
 import pandas as pd
 from pandas import ExcelWriter
 
+REQUIRED_TOTAL_CREDIT_POINTS = 192
+IGNORED_ZERO_CREDIT_POINT_UNITS = ['GENG4411']
+
 class Marks_processor():
     def __init__(self, handbookDB) -> None:
         self.handbookDB = handbookDB
@@ -105,7 +108,7 @@ class Marks_processor():
                     zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
                     
                     # Filter out GENG4411 since GENG4412 is taken sequentially and will flag as not eligable
-                    zero_cp_units = [unit for unit in zero_cp_units if unit != 'GENG4411']
+                    zero_cp_units = [unit for unit in zero_cp_units if unit not in IGNORED_ZERO_CREDIT_POINT_UNITS]
 
                     for z_unit in zero_cp_units:
                         if z_unit not in unit_codes:
@@ -128,11 +131,6 @@ class Marks_processor():
                         comments[index[0]][major_id].append(f'Missing {required_credit_points - current_credit_points} credit points for rule {rule[0]}')
                         major_eligable = False
 
-                    # Find all the units that are 0 credit points
-                    # Check that the student has completed it
-                    # Otherwise major_eligable = False, and add a comment 
-
-
                 if major_eligable:
                     eligable = True
                     if index[0] not in student_eligable:
@@ -141,7 +139,7 @@ class Marks_processor():
                     
             if eligable:
                 units_done = self.completed_sufficient_units(row)
-                eligable = (units_done >= 192)
+                eligable = (units_done >= REQUIRED_TOTAL_CREDIT_POINTS)
                 if not eligable:
                     if index[0] not in comments:
                         comments[index[0]] = {}
@@ -149,7 +147,7 @@ class Marks_processor():
                         comments[index[0]][major_id] = []
                     if index[0] not in student_eligable:
                         student_eligable[index[0]] = []    
-                    comments[index[0]][major_id].append(f"Insufficient credit points to graduate. Completed {units_done} credit points of 192")
+                    comments[index[0]][major_id].append(f"Insufficient credit points to graduate. Completed {units_done} credit points of {REQUIRED_TOTAL_CREDIT_POINTS}")
                     student_eligable[index[0]][0] = 'Not Eligable'
             if not eligable:
                 if index[0] not in student_eligable:
@@ -173,14 +171,6 @@ class Marks_processor():
         eh_wam_values_adjusted = relevant_units_adjusted.groupby('Person_ID').apply(
             lambda x: (x['Adjusted_Mark'] * x['Relevant_Credit_Points']).sum() / x['Relevant_Credit_Points'].sum()
         )
-
-        # TESTING
-        # For 23001000, print the calculation of the EH-WAM with each row
-        user = relevant_units_adjusted[relevant_units_adjusted['Person_ID'] == 23002002]
-        user['Mark x Credit Points'] = user['Adjusted_Mark'] * user['Relevant_Credit_Points']
-        # prints each row with the calculation
-        # for index, row in user.iterrows():
-            # print(f'{row["Unit_Code"]} - {row["Mark x Credit Points"]} / {row["Relevant_Credit_Points"]}')
 
         eh_wam_adjusted = pd.DataFrame(eh_wam_values_adjusted, columns=['EH-WAM']).reset_index()
         eh_wam_adjusted['EH-WAM'] = eh_wam_adjusted['EH-WAM'].round(3)
