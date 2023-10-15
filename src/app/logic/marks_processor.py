@@ -155,8 +155,10 @@ class Marks_processor():
                     student_eligable[index[0]] = []
                 student_eligable[index[0]].append('Not Eligable')
 
-        print(comments)
-        print(student_eligable)
+        # removes all duplicate comments
+        for person_id in comments:
+            for major_id in comments[person_id]:
+                comments[person_id][major_id] = list(set(comments[person_id][major_id]))
 
         # Filter out rows with missing or None values and for Level 3/4/5 units
         relevant_data_adjusted = input_data.dropna(subset=['Adjusted_Mark', 'Relevant_Credit_Points'])
