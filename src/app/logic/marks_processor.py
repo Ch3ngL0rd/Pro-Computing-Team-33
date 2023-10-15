@@ -62,7 +62,7 @@ class Marks_processor():
     
     def passed(self, grade):
         # HD,D,CR,P,UP,PS,PA 
-        if grade in ['HD', 'D', 'CR', 'P', 'UP', 'PS', 'PA']:
+        if grade in ['HD', 'D', 'CR', 'P', 'UP', 'PS', 'PA','AC']:
             return True
         else:
             return False
@@ -83,6 +83,8 @@ class Marks_processor():
         eligability_data = eligability_data.groupby(['Person_ID', 'Major_Deg']).apply(
             lambda x: x[['Unit_Code','Grade','Relevant_Credit_Points']].values.tolist()
         )
+        # prints all of the first person 
+        print(eligability_data[23001000].values.tolist())
 
         comments = {}
         student_eligable = {}
@@ -90,7 +92,7 @@ class Marks_processor():
         for index, row in eligability_data.items():
             eligable = False
             # turns their unit_codes into a set
-            unit_codes = set([unit[0] for unit in row])
+            unit_codes = set([unit[0].strip() for unit in row])
             major_ids = self.handbookDB.get_major_ids(index[1])
             # for each major id, get the rules
             # comments is user_id : {major_id: ['comment']}
@@ -101,16 +103,17 @@ class Marks_processor():
                     required_credit_points = rule[1]
                     current_credit_points = 0
 
-                    # # Zero credit point unit check
-                    # zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
-                    # for z_unit in zero_cp_units:
-                    #     if z_unit not in unit_codes:
-                    #         if index[0] not in comments:
-                    #             comments[index[0]] = {}
-                    #         if major_id not in comments[index[0]]:
-                    #             comments[index[0]][major_id] = []
-                    #         comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {z_unit}')
-                    #         major_eligable = False
+                    # Zero credit point unit check
+                    zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
+                    print(f'Zero credit point units: {zero_cp_units}')
+                    for z_unit in zero_cp_units:
+                        if z_unit not in unit_codes:
+                            if index[0] not in comments:
+                                comments[index[0]] = {}
+                            if major_id not in comments[index[0]]:
+                                comments[index[0]][major_id] = []
+                            comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {z_unit}')
+                            major_eligable = False
 
                     for unit in rule[2]:
                         if unit[0] in unit_codes:
