@@ -9,6 +9,16 @@ class Marks_processor():
         self.handbookDB = handbookDB
 
     def adjust_mark(self, row):
+        """
+        Adjust student marks based on specified conditions relating to grade.
+        
+        Parameters:
+        - row (pd.Series): A row of a DataFrame containing student grade information.
+        
+        Returns:
+        int or None: The adjusted mark based on grading conditions, or None if conditions are not met.
+        """
+
         grade = row['Grade']
         mark = row['Mark']
 
@@ -24,6 +34,15 @@ class Marks_processor():
             return None
 
     def choose_credit_points(self, row):
+        """
+        Choose relevant credit points based on adjusted marks.
+        
+        Parameters:
+        - row (pd.Series): A row of a DataFrame containing student mark information.
+        
+        Returns:
+        int or None: Chosen credit points or None if mark is None.
+        """
         mark = row['Adjusted_Mark']
         if mark is not None:
             if mark < 50:
@@ -33,6 +52,16 @@ class Marks_processor():
         return None
 
     def assign_honours(self, row):
+        """
+        Assign an honours classification based on EH-WAM and GENG4412 marks.
+        
+        Parameters:
+        - row (pd.Series): A row of a DataFrame containing EH-WAM and GENG4412 mark.
+        
+        Returns:
+        str: Honours classification as per predetermined rules.
+        """
+
         eh_wam = row['EH-WAM']
         geng4412_mark = row['GENG4412 Mark']
         if eh_wam >= 80 and (not pd.isna(geng4412_mark) and geng4412_mark >= 80):
@@ -44,26 +73,32 @@ class Marks_processor():
         else:
             return 'H3'
 
-    def major_units(self, conn, major, yr):
-
-        units = self.handbookDB.select_all_major_units(major, yr)
-
-        core_units = []
-        for unit in units:
-            if unit[4] in ('3','4', '5'):
-                core_units.append(unit)
-
-        return core_units
-    
     def completed_sufficient_units(self, student_data):
+        """
+        Calculate the total credit points from passed units for a student.
+        
+        Parameters:
+        - student_data (list): Data regarding student's units and grades.
+        
+        Returns:
+        int: Total credit points achieved from passed units.
+        """
         credit_count = 0
         for unit in student_data:
             if self.passed(unit[1]):
                 credit_count += int(unit[2])
         return credit_count
-            
-    
+        
     def passed(self, grade):
+        """
+        Determine if the given grade is considered passing.
+        
+        Parameters:
+        - grade (str): The grade to be checked.
+        
+        Returns:
+        bool: True if the grade is passing, False otherwise.
+        """
         # HD,D,CR,P,UP,PS,PA 
         if grade in ['HD', 'D', 'CR', 'P', 'UP', 'PS', 'PA','AC']:
             return True
@@ -72,6 +107,18 @@ class Marks_processor():
 
 
     def process_file(self, input_filepath, output_filepath):
+        """
+        Process an input Excel file of student data, calculate various metrics, qualifications,
+        and assign honours classifications following predetermined logic and rules. The 
+        processed data is then written to an output Excel file.
+        
+        Parameters:
+        - input_filepath (str): The path to the input Excel file.
+        - output_filepath (str): The path to the output Excel file to be created.
+        
+        Returns:
+        pd.DataFrame: The processed student data DataFrame.
+        """
         # Load the input data
         input_data = pd.read_excel(input_filepath)
 
@@ -229,29 +276,4 @@ class Marks_processor():
             worksheet = writer.sheets['Sheet1']
             worksheet.auto_filter.ref = worksheet.dimensions
 
-
         return merged_data_adjusted
-    
-    # Need to implement handbook db into wam calculations
-    # Eligability checks and process into comments
-    '''
-    We want
-    Eligability checks:
-    - For each rule, check that the student has enough credit points to satisfy the rule
-
-    We need:
-    1. way to get unit rules from a major using the handbook db
-    2. way to get a students units from the input data
-    
-    only level 3,4,5 units in their major
-    other units are ignored - different levels and broadening units
-    SUM[unit mark x credit points] / sum(credit points) = eh-wam
-    additional requirements - geng >= 80, geng >= 70, must have geng
-    all attempts are included - except UP/UF ignored
-
-    1. Time
-    2. Majors
-
-    # Get every unique person id x major
-    # For each person id x major, get all the units they have done
-    '''
