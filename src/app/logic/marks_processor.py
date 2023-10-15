@@ -1,6 +1,9 @@
 import pandas as pd
 from pandas import ExcelWriter
 
+REQUIRED_TOTAL_CREDIT_POINTS = 192
+IGNORED_ZERO_CREDIT_POINT_UNITS = ['GENG4411']
+
 class Marks_processor():
     def __init__(self, handbookDB) -> None:
         self.handbookDB = handbookDB
@@ -62,7 +65,7 @@ class Marks_processor():
     
     def passed(self, grade):
         # HD,D,CR,P,UP,PS,PA 
-        if grade in ['HD', 'D', 'CR', 'P', 'UP', 'PS', 'PA']:
+        if grade in ['HD', 'D', 'CR', 'P', 'UP', 'PS', 'PA','AC']:
             return True
         else:
             return False
@@ -90,7 +93,7 @@ class Marks_processor():
         for index, row in eligability_data.items():
             eligable = False
             # turns their unit_codes into a set
-            unit_codes = set([unit[0] for unit in row])
+            unit_codes = set([unit[0].strip() for unit in row])
             major_ids = self.handbookDB.get_major_ids(index[1])
             # for each major id, get the rules
             # comments is user_id : {major_id: ['comment']}
@@ -101,16 +104,20 @@ class Marks_processor():
                     required_credit_points = rule[1]
                     current_credit_points = 0
 
-                    # # Zero credit point unit check
-                    # zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
-                    # for z_unit in zero_cp_units:
-                    #     if z_unit not in unit_codes:
-                    #         if index[0] not in comments:
-                    #             comments[index[0]] = {}
-                    #         if major_id not in comments[index[0]]:
-                    #             comments[index[0]][major_id] = []
-                    #         comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {z_unit}')
-                    #         major_eligable = False
+                    # Zero credit point unit check
+                    zero_cp_units = [unit[0] for unit in rule[2] if unit[1] == 0]
+                    
+                    # Filter out GENG4411 since GENG4412 is taken sequentially and will flag as not eligable
+                    zero_cp_units = [unit for unit in zero_cp_units if unit not in IGNORED_ZERO_CREDIT_POINT_UNITS]
+
+                    for z_unit in zero_cp_units:
+                        if z_unit not in unit_codes:
+                            if index[0] not in comments:
+                                comments[index[0]] = {}
+                            if major_id not in comments[index[0]]:
+                                comments[index[0]][major_id] = []
+                            comments[index[0]][major_id].append(f'Student has not completed 0 credit point unit: {z_unit}')
+                            major_eligable = False
 
                     for unit in rule[2]:
                         if unit[0] in unit_codes:
@@ -124,11 +131,6 @@ class Marks_processor():
                         comments[index[0]][major_id].append(f'Missing {required_credit_points - current_credit_points} credit points for rule {rule[0]}')
                         major_eligable = False
 
-                    # Find all the units that are 0 credit points
-                    # Check that the student has completed it
-                    # Otherwise major_eligable = False, and add a comment 
-
-
                 if major_eligable:
                     eligable = True
                     if index[0] not in student_eligable:
@@ -137,7 +139,7 @@ class Marks_processor():
                     
             if eligable:
                 units_done = self.completed_sufficient_units(row)
-                eligable = (units_done >= 192)
+                eligable = (units_done >= REQUIRED_TOTAL_CREDIT_POINTS)
                 if not eligable:
                     if index[0] not in comments:
                         comments[index[0]] = {}
@@ -145,15 +147,17 @@ class Marks_processor():
                         comments[index[0]][major_id] = []
                     if index[0] not in student_eligable:
                         student_eligable[index[0]] = []    
-                    comments[index[0]][major_id].append(f"Insufficient credit points to graduate. Completed {units_done} credit points of 192")
+                    comments[index[0]][major_id].append(f"Insufficient credit points to graduate. Completed {units_done} credit points of {REQUIRED_TOTAL_CREDIT_POINTS}")
                     student_eligable[index[0]][0] = 'Not Eligable'
             if not eligable:
                 if index[0] not in student_eligable:
                     student_eligable[index[0]] = []
                 student_eligable[index[0]].append('Not Eligable')
 
-        print(comments)
-        print(student_eligable)
+        # removes all duplicate comments
+        for person_id in comments:
+            for major_id in comments[person_id]:
+                comments[person_id][major_id] = list(set(comments[person_id][major_id]))
 
         # Filter out rows with missing or None values and for Level 3/4/5 units
         relevant_data_adjusted = input_data.dropna(subset=['Adjusted_Mark', 'Relevant_Credit_Points'])
@@ -167,14 +171,6 @@ class Marks_processor():
         eh_wam_values_adjusted = relevant_units_adjusted.groupby('Person_ID').apply(
             lambda x: (x['Adjusted_Mark'] * x['Relevant_Credit_Points']).sum() / x['Relevant_Credit_Points'].sum()
         )
-
-        # TESTING
-        # For 23001000, print the calculation of the EH-WAM with each row
-        user = relevant_units_adjusted[relevant_units_adjusted['Person_ID'] == 23002002]
-        user['Mark x Credit Points'] = user['Adjusted_Mark'] * user['Relevant_Credit_Points']
-        # prints each row with the calculation
-        # for index, row in user.iterrows():
-            # print(f'{row["Unit_Code"]} - {row["Mark x Credit Points"]} / {row["Relevant_Credit_Points"]}')
 
         eh_wam_adjusted = pd.DataFrame(eh_wam_values_adjusted, columns=['EH-WAM']).reset_index()
         eh_wam_adjusted['EH-WAM'] = eh_wam_adjusted['EH-WAM'].round(3)
@@ -205,13 +201,10 @@ class Marks_processor():
         merged_data_adjusted['Missing Information (Y/N)'] = ''
         merged_data_adjusted['Comments (missing information)'] = ''
 
-        print(f"\033[91m{merged_data_adjusted}\033[00m")
-
         # Add in comments only if the student is not eligable
         for index, row in merged_data_adjusted.iterrows():
             person_id = int(row['Person_ID'])
             if person_id in comments:
-                print(student_eligable[person_id][0])
                 if student_eligable[person_id][0] == 'Not Eligable':
                     merged_data_adjusted.at[index, 'Missing Information (Y/N)'] = 'Y'
                     comment_string = ''
