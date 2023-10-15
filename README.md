@@ -12,6 +12,7 @@ Our project:
 - Computes the EH-WAM.
 - Assigns an Honours class using the EH-WAM and GENG4411/12 mark.
 - Flags students with incomplete data.
+- Checks eligiblity requirements
 
 
 ## Team Members
@@ -23,12 +24,8 @@ Our project:
 - Yanghai Yu
 - Zachary Cheng
 
-![7u96dh](https://github.com/Ch3ngL0rd/Pro-Computing-Team-33/assets/85885968/c04e443d-0c22-45ce-a05d-640068ae422a)
-
 ## Last Update
 
-Last modified: 31 July 2023  
+Last modified: 15th October 2023  
 Modified by: Zachary Cheng
-
-
 ...
